@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Fitness App</title>
+    <style>
+        /* --- Day Mode --- */
+        :root {
+            --bg-color: #f4f6f8;       
+            --card-bg: #ffffff;        
+            --text-color: #333333;     
+            --text-muted: #777777;
+            --border-color: #dddddd;
+            --bar-bg: #2c3e50;         
+            --bar-text: #ffffff;
+            --accent-color: #1e4d2e;   
+            --accent-hover: #153821;
+            --danger: #d9534f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; -webkit-touch-callout: none; }
+        input, textarea, button, select { font-family: inherit; user-select: auto; }
+
+        body { background-color: var(--bg-color); color: var(--text-color); }
+        .hidden { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 10px; } .mb-1 { margin-bottom: 10px; }
+        .p-1 { padding: 15px; }
+        
+        input, select, textarea {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            background: #fdfdfd; color: var(--text-color);
+            border: 1px solid var(--border-color); border-radius: 5px;
+        }
+        
+        button {
+            width: 100%; padding: 12px; background: var(--accent-color); color: #ffffff;
+            border: none; border-radius: 5px; font-weight: bold; cursor: pointer;
+        }
+        button:hover { background: var(--accent-hover); }
+        .btn-danger { background: var(--danger); }
+
+        .container { max-width: 500px; margin: 0 auto; min-height: 100vh; position: relative; padding-bottom: 60px;}
+        .auth-box { padding: 20px; margin-top: 50px; background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-left: 15px; margin-right: 15px;}
+        .auth-box h2 { text-align: center; margin-bottom: 20px; color: var(--bar-bg); }
+        .link-text { color: var(--text-muted); cursor: pointer; text-decoration: underline; text-align: center; display: block; margin-top: 10px;}
+        .show-pass-container { display: flex; align-items: center; gap: 8px; margin-bottom: 15px; cursor: pointer; font-size: 14px; color: var(--text-muted); }
+        .show-pass-container input { width: auto; margin-bottom: 0; }
+
+        .navbar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bar-bg); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid #1a252f; z-index: 100; max-width: 500px; margin: 0 auto; }
+        .nav-item { color: #95a5a6; cursor: pointer; font-size: 14px; }
+        .nav-item.active { color: #ffffff; font-weight: bold; }
+
+        .topbar { padding: 15px; background: var(--bar-bg); color: var(--bar-text); border-bottom: 1px solid #1a252f; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10; }
+        .controls { padding: 10px 15px; display: flex; gap: 10px; flex-wrap: wrap; background: var(--card-bg); border-bottom: 1px solid var(--border-color);}
+        .controls select { width: auto; flex-grow: 1; margin-bottom: 0; padding: 8px;}
+        .view-btns { display: flex; gap: 5px; }
+        .view-btns button { width: auto; padding: 8px 12px; font-size: 12px; background: var(--bar-bg);}
+        .group-title { padding: 10px 15px; background: #e9ecef; font-weight: bold; border-bottom: 1px solid var(--border-color); margin-top: 10px; color: var(--bar-bg);}
+
+        .ex-item { background: var(--card-bg); border-bottom: 1px solid var(--border-color); cursor: pointer; transition: background 0.2s; }
+        .ex-item:active { background: #f0f0f0; }
+        .view-list .ex-item { padding: 15px; }
+        .view-list .ex-media { display: none; }
+        .view-medium .ex-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; }
+        .view-medium .ex-media { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; border: 1px solid #eee;}
+        .view-large .ex-item { padding: 15px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; border: 1px solid var(--border-color); border-radius: 8px; border-bottom: none; margin-left: 15px; margin-right: 15px; margin-top: 10px;}
+        .view-large .ex-media { width: 100%; height: auto; max-height: 300px; object-fit: contain; border-radius: 5px; background: transparent; }
+
+        .ex-details { display: flex; flex-direction: column; }
+        .ex-name { font-weight: bold; font-size: 16px; color: var(--bar-bg);}
+        .ex-meta { font-size: 12px; color: var(--text-muted); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .modal { background: var(--card-bg); padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; border: 1px solid var(--border-color); }
+        .modal h3 { margin-bottom: 15px; color: var(--bar-bg); }
+        .btn-group { display: flex; gap: 10px; }
+
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; justify-content: center; align-items: center; z-index: 2000; font-size: 20px; color: var(--bar-bg); font-weight: bold; }
+
+        /* --- Night Mode --- */
+        body.dark-mode { --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #e0e0e0; --text-muted: #a0a0a0; --border-color: #333333; --bar-bg: #1f1f1f; --bar-text: #ffffff; --accent-color: #2e7d32; --accent-hover: #1b5e20; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #2d2d2d; color: var(--text-color); border-color: var(--border-color); }
+        body.dark-mode .group-title { background: #2d2d2d; color: #ffffff; }
+        body.dark-mode .ex-item:active { background: #2a2a2a; }
+        body.dark-mode #loader { background: rgba(18, 18, 18, 0.9); color: var(--text-color); }
+
+        @keyframes pulse-glow { 0% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.4)); } 50% { transform: scale(1.18); filter: drop-shadow(0 0 8px rgba(241, 196, 15, 0.8)); } 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(241, 196, 15, 0.4)); } }
+        .light-btn { display: inline-block; font-size: 19px; cursor: pointer; animation: pulse-glow 2s infinite ease-in-out; transition: transform 0.2s; padding: 2px 6px; user-select: none; }
+        .light-btn:active { transform: scale(0.9); }
+
+        /* --- Bulk Editor Fullscreen CSS --- */
+        .fullscreen-editor { position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 3000; background: var(--bg-color) !important; padding: 15px !important; display: flex; flex-direction: column; overflow: hidden; margin: 0 !important; border-radius: 0 !important; }
+        .fullscreen-editor textarea { flex: 1; height: 100%; margin-bottom: 10px; }
+
+        /* 🌈 রেইনবো মিডিয়া লোডার স্টাইল */
+        .media-placeholder {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa; 
+            border-radius: 5px;
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: rainbow 3s ease infinite;
+        }
+
+        body.dark-mode .media-placeholder { background-color: #2d2d2d; }
+        .view-medium .media-placeholder { width: 60px; height: 60px; }
+        .view-large .media-placeholder { width: 100%; height: 200px; font-size: 16px; }
+
+        @keyframes rainbow { 
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loader" class="hidden">Loading...</div>
+
+    <div id="login-section" class="container hidden">
+        <div class="auth-box">
+            <h2>লগইন</h2>
+            <input type="tel" id="login-mobile" placeholder="মোবাইল নাম্বার">
+            <input type="password" id="login-password" placeholder="পাসওয়ার্ড">
+            <div class="show-pass-container" onclick="togglePassword('login-password', 'show-pass-checkbox')">
+                <input type="checkbox" id="show-pass-checkbox"> <label style="cursor:pointer;">পাসওয়ার্ড দেখান</label>
+            </div>
+            <button onclick="handleLogin()">লগইন করুন</button>
+            <div style="margin-top: 30px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <p class="text-center mb-1">অ্যাকাউন্ট নেই?</p>
+                <button style="background: var(--bar-bg);" onclick="switchView('signup-section')">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="signup-section" class="container hidden">
+        <div class="auth-box">
+            <h2>সাইন আপ</h2>
+            <input type="text" id="su-name" placeholder="আপনার নাম">
+            <input type="tel" id="su-mobile" placeholder="মোবাইল নাম্বার">
+            <input type="number" id="su-age" placeholder="বয়স">
+            <input type="password" id="su-password" placeholder="পাসওয়ার্ড">
+            <input type="text" id="su-duration" placeholder="ব্যায়ামের সময়কাল">
+            <select id="su-purpose">
+                <option value="">ব্যায়ামের উদ্দেশ্য</option>
+                <option value="Fat Loss">ওজন কমানো (Fat Loss)</option>
+                <option value="Muscle Build">মাসল বিল্ড (Muscle Build)</option>
+                <option value="Fitness">ফিটনেস (General Fitness)</option>
+            </select>
+            <select id="su-gender">
+                <option value="">জেন্ডার নির্বাচন করুন</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+            <button onclick="handleSignup()">সাবমিট করুন</button>
+            <span class="link-text mt-1" onclick="switchView('login-section')">লগইন পেজে ফিরে যান</span>
+        </div>
+    </div>
+
+    <div id="main-app" class="container hidden">
+        <div class="topbar">
+            <div id="user-greeting" style="font-weight: bold;"></div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="nav-edit-btn" class="hidden" style="width: auto; padding: 2px 8px; font-size: 16px; background: transparent; border: 1px solid #fff; color: #fff; border-radius: 5px;" onclick="openEditModal()">✏️</button>
+                <button id="nav-admin-btn" class="hidden" style="width: auto; padding: 2px 10px; font-size: 18px; font-weight: bold; background: transparent; border: 1px solid #fff; color: #fff; border-radius: 5px;" onclick="switchTab('admin')">+</button>
+                
+                <button style="width: auto; padding: 5px 10px; font-size: 14px; background: transparent; border: 1px solid #fff; color: #fff;" onclick="forceRefreshData()">🔄</button>
+                
+                <button id="theme-toggle" style="width: auto; padding: 5px 10px; font-size: 12px; background: transparent; border: 1px solid #fff; color: #fff;" onclick="toggleTheme()">নাইট মুড</button>
+                <button style="width: auto; padding: 5px 10px; font-size: 12px; background: transparent; border: 1px solid #fff; color: #fff;" onclick="logout()">লগ আউট</button>
+            </div>
+        </div>
+
+        <div id="tab-home" class="tab-content">
+            <div class="controls">
+                <select id="group-by" onchange="renderHome()">
+                    <option value="type">টাইপ অনুযায়ী</option>
+                    <option value="target">টার্গেট অনুযায়ী</option>
+                </select>
+                <div class="view-btns">
+                    <button onclick="changeView('list')">List</button>
+                    <button onclick="changeView('medium')">Medium</button>
+                    <button onclick="changeView('large')">Large</button>
+                </div>
+            </div>
+            <div class="p-1 pb-0">
+                <button onclick="openAiRoutineModal()">এআই দিয়ে রুটিন তৈরি করুন</button>
+            </div>
+            <div id="exercise-list-container" class="view-medium pb-2"></div>
+        </div>
+
+        <div id="tab-routine" class="tab-content hidden">
+            <div class="controls">
+                <div class="view-btns" style="flex-grow: 1;">
+                    <button onclick="changeView('list', 'routine')">List</button>
+                    <button onclick="changeView('medium', 'routine')">Med</button>
+                    <button onclick="changeView('large', 'routine')">Large</button>
+                </div>
+                <button class="btn-danger" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="deleteRoutine()">রুটিন মুছুন</button>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color);">
+                <h3 id="routine-header" style="color: var(--accent-color); margin: 0; font-size: 18px;">আজকের রুটিন</h3>
+                <select id="routine-day-filter" style="width: auto; margin: 0; padding: 5px; font-size: 14px;" onchange="renderRoutine(this.value)">
+                    <option value="today">আজকের রুটিন</option>
+                </select>
+            </div>
+            <div id="routine-list-container" class="view-medium pb-2"></div>
+        </div>
+
+        <div id="tab-admin" class="tab-content hidden p-1">
+            <div id="bulk-editor-container" class="auth-box" style="margin-top: 0; position: relative;">
+                <button id="close-admin-btn" style="position: absolute; top: 10px; right: 10px; width: auto; background: transparent; color: var(--danger); font-size: 20px; padding: 0; line-height: 1;" onclick="switchTab('home')">✖</button>
+                
+                <h3 style="color: var(--bar-bg); margin-bottom: 10px;">এআই বাল্ক এডিটর (Bulk Manager)</h3>
+                
+                <div style="display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap;">
+                    <button style="width: auto; padding: 6px 10px; font-size: 12px; background: #6c757d;" onclick="toggleBulkFullscreen()">⛶ ফুলস্ক্রিন</button>
+                    <button style="width: auto; padding: 6px 10px; font-size: 12px; background: #17a2b8;" onclick="copyBulkText()">📋 কপি</button>
+                    <button style="width: auto; padding: 6px 10px; font-size: 12px; background: #17a2b8;" onclick="pasteBulkText()">📝 পেস্ট</button>
+                    <button style="width: auto; padding: 6px 10px; font-size: 12px; background: #28a745;" onclick="openRecallModal()">🔄 রিকল</button>
+                    <button style="width: auto; padding: 6px 10px; font-size: 12px; background: var(--danger);" onclick="clearBulkText()">❌ ক্লিয়ার</button>
+                </div>
+
+                <textarea id="bulk-editor-box" rows="12" style="font-size: 13px;" placeholder="@exercise name@&#10;Bodyweight Squat&#10;@image link@&#10;https://res.cloudinary.../squat.mp4&#10;@type@&#10;Resistance&#10;@target@&#10;Leg / Glutes&#10;@status@&#10;Active&#10;@benefit@&#10;উরু শক্ত করে।&#10;@description@&#10;পায়ের শক্তি বাড়ে।&#10;@tools@&#10;Free hand&#10;@forgender@&#10;All&#10;@@@"></textarea>
+                
+                <div style="display: flex; gap: 10px; margin-top: 5px;">
+                    <button style="background: var(--bar-bg);" onclick="submitBulkAdd()">➕ সব অ্যাড করুন</button>
+                    <button style="background: #e67e22;" onclick="submitBulkUpdate()">📝 সব আপডেট করুন</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="navbar">
+            <div class="nav-item active" onclick="switchTab('home')" id="nav-home">হোম</div>
+            <div class="nav-item" onclick="switchTab('routine')" id="nav-routine">রুটিন</div>
+        </div>
+    </div>
+
+    <div id="modal-recall" class="modal-overlay hidden">
+        <div class="modal" style="max-height: 85vh; display: flex; flex-direction: column;">
+            <h3 style="color: var(--bar-bg);">ব্যায়াম রিকল করুন</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">যেগুলো এডিট করতে চান সেগুলোতে টিক দিন:</p>
+            <div id="recall-list" style="overflow-y: auto; flex: 1; text-align: left; padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; margin-bottom: 15px;"></div>
+            <div class="btn-group mt-1">
+                <button style="background: var(--text-muted);" onclick="closeModal('modal-recall')">বাতিল</button>
+                <button onclick="loadSelectedToBulk()">বক্সে লোড করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-manual-routine" class="modal-overlay hidden">
+        <div class="modal" style="max-height: 85vh; overflow-y: auto;">
+            <h3 id="modal-ex-title" style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">রুটিনে যোগ করুন</h3>
+            <p class="text-muted" style="font-size: 13px; margin-bottom: 15px;">যেসব বারে/তারিখে এই ব্যায়ামটি করতে চান তা টিক দিন এবং সেট/রেপ্স লিখুন:</p>
+            <div id="lp-days-container" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;"></div>
+            <div class="btn-group">
+                <button style="background: var(--danger);" onclick="closeModal('modal-manual-routine')">বাতিল</button>
+                <button onclick="saveManualRoutine()">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-ai-routine" class="modal-overlay hidden">
+        <div class="modal">
+            <h3>এ আই রুটিন পেস্ট করুন</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">ফরম্যাট: @Exercise name@day/date@sets@reps@</p>
+            <textarea id="ai-routine-input" rows="6" placeholder="@Hip flexor@sat@3@10@&#10;@dumble press@sun@3@20@"></textarea>
+            <div class="btn-group mb-1">
+                <button style="background: var(--bar-bg); font-size: 12px;" onclick="copyDemoPrompt()">ডেমো প্রম্পট কপি করুন</button>
+            </div>
+            <div class="btn-group">
+                <button style="background: var(--text-muted);" onclick="closeModal('modal-ai-routine')">বাতিল</button>
+                <button onclick="submitAiRoutine()">সেভ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-edit-exercise" class="modal-overlay hidden" onclick="closeModalOutside(event, 'modal-edit-exercise')">
+        <div class="modal" style="max-height: 85vh; overflow-y: auto;" onclick="event.stopPropagation()">
+            <h3 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">ব্যায়াম ডিলিট</h3>
+            <select id="edit-ex-select" style="margin-top: 10px;">
+                <option value="">ব্যায়াম নির্বাচন করুন...</option>
+            </select>
+            <div class="btn-group mt-1" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button style="background: var(--danger); flex: 1;" onclick="deleteExercise()">ডিলিট করুন</button>
+                <button style="background: #777777; flex: 1;" onclick="closeModal('modal-edit-exercise')">বাতিল</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-benefit" class="modal-overlay hidden" onclick="closeModalOutside(event, 'modal-benefit')">
+        <div class="modal" onclick="event.stopPropagation()" style="border-left: 5px solid #f1c40f;">
+            <h3 id="benefit-title" style="color: var(--bar-bg); margin-bottom: 10px;">ব্যায়ামের উপকারিতা</h3>
+            <p id="benefit-text" style="font-size: 14px; line-height: 1.5; color: var(--text-color); white-space: pre-line;"></p>
+            <div style="text-align: right; margin-top: 15px;">
+                <button style="width: auto; background: var(--text-muted); padding: 6px 15px; font-size: 13px;" onclick="closeModal('modal-benefit')">বন্ধ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-edit-routine-item" class="modal-overlay hidden" onclick="closeModalOutside(event, 'modal-edit-routine-item')">
+        <div class="modal" onclick="event.stopPropagation()">
+            <h3 style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">রুটিন ব্যায়াম এডিট</h3>
+            <input type="hidden" id="rt-edit-name">
+            <input type="hidden" id="rt-edit-day">
+            <label style="font-size: 12px; color: var(--text-muted); margin-top: 10px; display:block;">সেট (Sets):</label>
+            <input type="number" id="rt-edit-sets">
+            <label style="font-size: 12px; color: var(--text-muted); display:block;">রেপ্স (Reps):</label>
+            <input type="number" id="rt-edit-reps">
+            <div class="btn-group mt-1">
+                <button style="background: var(--danger); flex: 1;" onclick="deleteRoutineItem()">ডিলিট</button>
+                <button style="background: #777777; flex: 1;" onclick="closeModal('modal-edit-routine-item')">বাতিল</button>
+                <button style="flex: 1;" onclick="updateRoutineItem()">আপডেট</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toBanglaNumber(str) { return String(str).replace(/\d/g, d => "০১২৩৪৫৬৭৮৯"[d]); }
+
+        const API_URL = "https://script.google.com/macros/s/AKfycbxHaXMKYh9OSRO2zOTjPna_wENZMxcwu2IT6mmsKuGJMQBIz-0Ote9o3wgS5HYYl1vWvA/exec";
+        
+        let currentUser = null;
+        let appData = { exercises: [], routines: [] };
+        let longPressTimer;
+        let selectedExerciseForRoutine = "";
+        let currentHomeView = 'medium';
+        let currentRoutineView = 'medium';
+
+        function toggleTheme() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('appTheme', isDark ? 'dark' : 'light');
+            document.getElementById('theme-toggle').innerText = isDark ? 'ডে মুড' : 'নাইট মুড';
+        }
+
+        function applyInitialTheme() {
+            const savedTheme = localStorage.getItem('appTheme');
+            const btn = document.getElementById('theme-toggle');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                if (btn) btn.innerText = 'ডে মুড';
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (btn) btn.innerText = 'নাইট মুড';
+            }
+        }
+
+        function showLoader(show = true) { document.getElementById('loader').classList.toggle('hidden', !show); }
+        function cleanMobileNumber(numStr) { return String(numStr).replace(/\D/g, '').slice(-10); }
+
+        function togglePassword(inputId, checkboxId) {
+            const input = document.getElementById(inputId);
+            const checkbox = document.getElementById(checkboxId);
+            if(input.type === 'password') { input.type = 'text'; checkbox.checked = true; } 
+            else { input.type = 'password'; checkbox.checked = false; }
+        }
+
+        async function fetchAPI(payload) {
+            showLoader(true);
+            try {
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const data = await response.json();
+                showLoader(false);
+                return data;
+            } catch (error) {
+                showLoader(false);
+                alert("নেটওয়ার্ক সমস্যা!");
+                return { status: "error" };
+            }
+        }
+
+        window.onload = () => {
+            applyInitialTheme();
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                switchView('main-app');
+                initApp();
+            } else {
+                switchView('login-section');
+            }
+            history.pushState(null, null, location.href);
+            window.onpopstate = function () {
+                history.pushState(null, null, location.href);
+                if (currentUser) switchTab('home'); else switchView('login-section'); 
+            };
+        };
+
+        function switchView(viewId) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('signup-section').classList.add('hidden');
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+       function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            if(tabId !== 'admin') document.getElementById(`nav-${tabId}`).classList.add('active');
+
+            if(tabId === 'home') renderHome();
+            if(tabId === 'routine') renderRoutine('today');
+        }
+
+        async function handleLogin() {
+            const rawMobile = document.getElementById('login-mobile').value;
+            const password = document.getElementById('login-password').value;
+            if(!rawMobile || !password) return alert("সব তথ্য দিন");
+
+            const res = await fetchAPI({ action: "login", mobile: cleanMobileNumber(rawMobile), password });
+            if(res.status === "success") {
+                currentUser = res.user;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                switchView('main-app'); initApp();
+            } else alert(res.message || "লগইন ব্যর্থ হয়েছে");
+        }
+
+        async function handleSignup() {
+            const payload = {
+                action: "signup",
+                name: document.getElementById('su-name').value,
+                mobile: cleanMobileNumber(document.getElementById('su-mobile').value),
+                age: document.getElementById('su-age').value,
+                password: document.getElementById('su-password').value,
+                duration: document.getElementById('su-duration').value,
+                purpose: document.getElementById('su-purpose').value,
+                gender: document.getElementById('su-gender').value 
+            };
+            if(!payload.name || !payload.mobile || !payload.password || !payload.gender) return alert("সবগুলো তথ্য সঠিকভাবে দিন!");
+            const res = await fetchAPI(payload);
+            if(res.status === "success") {
+                alert("অ্যাকাউন্ট তৈরি হয়েছে! দয়া করে লগইন করুন।"); switchView('login-section');
+            } else alert(res.message);
+        }
+
+        function logout() {
+            currentUser = null; localStorage.removeItem('currentUser'); switchView('login-section');
+            document.getElementById('login-mobile').value = ''; document.getElementById('login-password').value = '';
+        }
+
+       async function initApp() {
+            document.getElementById('user-greeting').innerText = `Hello, ${currentUser.name}`;
+            const userRole = currentUser.type || currentUser.Type || '';
+            if(userRole && String(userRole).trim().toLowerCase() === 'admin') {
+                document.getElementById('nav-admin-btn').classList.remove('hidden');
+                document.getElementById('nav-edit-btn').classList.remove('hidden'); 
+            } else {
+                document.getElementById('nav-admin-btn').classList.add('hidden');
+                document.getElementById('nav-edit-btn').classList.add('hidden');
+            }
+            await loadData(); switchTab('home');
+        }
+
+        /* =========================================
+           💥 ডাটা প্রসেস ও ক্যাশ লোডিং মেকানিজম 💥
+           ========================================= */
+
+        function processFetchedData(res) {
+            let exs = res.exercises || []; let rts = res.routines || [];
+            const inactiveExerciseNames = exs.filter(e => !e.status || String(e.status).toLowerCase().trim() === 'inactive').map(e => String(e.name).toLowerCase().trim());
+            const userRole = currentUser.type || currentUser.Type || '';
+            const isAdmin = String(userRole).trim().toLowerCase() === 'admin';
+            const userGender = currentUser.gender || currentUser.Gender || currentUser.forgender || 'male'; 
+            const isMale = String(userGender).trim().toLowerCase() === 'male';
+
+            if(!isAdmin) {
+                exs = exs.filter(e => e.status && String(e.status).toLowerCase().trim() === 'active');
+                if (isMale) {
+                    exs = exs.filter(e => {
+                        const eGender = e.forgender || e.gender || e['for gender'] || '';
+                        return !(String(eGender).trim().toLowerCase() === 'female');
+                    });
+                }
+            }
+            rts = rts.filter(r => !inactiveExerciseNames.includes(String(r.exerciseName).toLowerCase().trim()));
+            appData.exercises = exs; appData.routines = rts;
+        }
+
+        async function loadData(forceRefresh = false) {
+            const cacheKey = 'appData_' + currentUser.name;
+
+            if (!forceRefresh) {
+                const cachedData = localStorage.getItem(cacheKey);
+                if (cachedData) {
+                    const parsed = JSON.parse(cachedData);
+                    appData.exercises = parsed.exercises || [];
+                    appData.routines = parsed.routines || [];
+                    
+                    // সাইলেন্ট ব্যাকগ্রাউন্ড আপডেট (অ্যাডমিন কিছু চেঞ্জ করলে ইউজার অটো পেয়ে যাবে)
+                    fetchAPI({ action: "getData", userName: currentUser.name }).then(res => {
+                        if(res.status === "success") {
+                            processFetchedData(res);
+                            localStorage.setItem(cacheKey, JSON.stringify({ exercises: appData.exercises, routines: appData.routines }));
+                            // স্ক্রিন অটো রিফ্রেশ
+                            if(!document.getElementById('tab-home').classList.contains('hidden')) renderHome();
+                            if(!document.getElementById('tab-routine').classList.contains('hidden')) renderRoutine(document.getElementById('routine-day-filter').value);
+                        }
+                    });
+                    return; 
+                }
+            }
+
+            // যদি ক্যাশ না থাকে অথবা ফোর্স রিফ্রেশ করা হয় (যেমন এডিট/অ্যাড করার পর)
+            const res = await fetchAPI({ action: "getData", userName: currentUser.name });
+            if(res.status === "success") {
+                processFetchedData(res);
+                localStorage.setItem(cacheKey, JSON.stringify({ exercises: appData.exercises, routines: appData.routines }));
+            }
+        }
+
+        async function forceRefreshData() {
+            await loadData(true);
+            const activeNav = document.querySelector('.nav-item.active');
+            if(activeNav) switchTab(activeNav.id.replace('nav-', ''));
+        }
+
+        function changeView(viewMode, section = 'home') {
+            if(section === 'home') { currentHomeView = viewMode; renderHome(); } 
+            else { currentRoutineView = viewMode; renderRoutine(document.getElementById('routine-day-filter').value); }
+        }
+
+        /* 🌈 রেইনবো প্লেসহোল্ডার জেনারেটর */
+        function generateMediaHTML(link) {
+            if(!link) return '';
+            
+            const uniqueId = 'media-' + Math.random().toString(36).substr(2, 9);
+            const isVideo = link.match(/\.(mp4|webm|ogg)$/i) || link.includes("youtube.com/embed/");
+            
+            let html = `<div id="placeholder-${uniqueId}" class="media-placeholder">Exercise is coming...<br>Wait</div>`;
+            
+            if(isVideo) {
+                html += `<video id="${uniqueId}" class="ex-media hidden" src="${link}" autoplay loop muted playsinline onloadeddata="document.getElementById('placeholder-${uniqueId}').classList.add('hidden'); this.classList.remove('hidden');"></video>`;
+            } else {
+                html += `<img id="${uniqueId}" class="ex-media hidden" src="${link}" alt="Exercise" onload="document.getElementById('placeholder-${uniqueId}').classList.add('hidden'); this.classList.remove('hidden');">`;
+            }
+            return html;
+        }
+
+       function renderHome() {
+            const container = document.getElementById('exercise-list-container');
+            container.className = `view-${currentHomeView} pb-2`; container.innerHTML = '';
+            const groupBy = document.getElementById('group-by').value;
+            const groups = {};
+            appData.exercises.forEach(ex => {
+                if (ex.status && String(ex.status).toLowerCase().trim() === 'inactive') return;
+                const key = String(ex[groupBy] || 'Others').trim().toUpperCase(); 
+                if(!groups[key]) groups[key] = []; groups[key].push(ex);
+            });
+            for(const [groupName, exs] of Object.entries(groups)) {
+                container.innerHTML += `<div class="group-title">${groupName}</div>`;
+                exs.forEach(ex => {
+                    const escapedName = ex.name.replace(/'/g, "\\'");
+                    const html = `
+                    <div class="ex-item"
+                         onmousedown="startLongPress('${escapedName}')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+                         ontouchstart="startLongPress('${escapedName}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+                        <div class="ex-details">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span class="light-btn" onclick="event.stopPropagation(); openBenefitModal('${escapedName}')">💡</span>
+                                <span class="ex-name">${ex.name}</span>
+                            </div>
+                            <span class="ex-meta">Type: ${ex.type || '-'} | Target: ${ex.target || '-'} | Tools: ${ex.tools || '-'}</span>
+                            ${ex.description ? `<span class="ex-meta" style="font-size: 11px; display: block; margin-top: 4px; color: var(--text-color);">${ex.description}</span>` : ''}
+                        </div>
+                        ${generateMediaHTML(ex.imageLink || ex.link)}
+                    </div>`;
+                    container.innerHTML += html;
+                });
+            }
+        }
+
+        function getTodayInfo() {
+            const d = new Date(); const daysEng = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']; const daysBng = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
+            return { date: String(d.getDate()), dayEng: daysEng[d.getDay()], dayBng: daysBng[d.getDay()] };
+        }
+        function isDateBasedStr(val) { return /^\d+$/.test(String(val).trim()); }
+
+       function renderRoutine(filterVal = null) {
+            updateRoutineDropdown(); 
+            const select = document.getElementById('routine-day-filter');
+            if (filterVal !== null) select.value = filterVal;
+            const currentFilter = select.value || 'today';
+            const container = document.getElementById('routine-list-container');
+            container.className = `view-${currentRoutineView} pb-2`; container.innerHTML = '';
+
+            if(appData.routines.length === 0) {
+                container.innerHTML = '<div class="p-1 text-center text-muted">কোনো রুটিন পাওয়া যায়নি</div>';
+                document.getElementById('routine-header').innerText = "আজকের রুটিন"; return;
+            }
+
+            const todayInfo = getTodayInfo();
+            const isRoutineDateBased = isDateBasedStr(appData.routines[0].dayDate);
+            
+            if (currentFilter === 'today') {
+                document.getElementById('routine-header').innerText = isRoutineDateBased ? `আজকের রুটিন (${toBanglaNumber(todayInfo.date)} তারিখ)` : `আজকের রুটিন (${todayInfo.dayBng})`;
+            } else {
+                document.getElementById('routine-header').innerText = isRoutineDateBased ? `রুটিন (${toBanglaNumber(currentFilter)} তারিখ)` : `রুটিন (${currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)})`;
+            }
+
+            const displayRoutines = appData.routines.filter(r => {
+                const val = String(r.dayDate).trim().toLowerCase();
+                if (currentFilter === 'today') {
+                    if(isRoutineDateBased) return val === todayInfo.date;
+                    else return val === todayInfo.dayEng || val === todayInfo.dayBng || val === todayInfo.dayEng.substring(0,3);
+                } else return val === currentFilter;
+            });
+
+            if(displayRoutines.length === 0) {
+                container.innerHTML = `<div class="p-1 text-center text-muted">${currentFilter === 'today' ? 'আজকের' : 'এই দিনের'} জন্য কোনো ব্যায়াম সেট করা নেই।</div>`; return;
+            }
+
+            displayRoutines.forEach(rt => {
+                const exDetail = appData.exercises.find(e => e.name.trim().toLowerCase() === rt.exerciseName.trim().toLowerCase()) || {};
+                const escapedName = rt.exerciseName.replace(/'/g, "\\'");
+                const html = `
+                <div class="ex-item" style="border-radius:0;"
+                     data-name="${rt.exerciseName}" data-day="${rt.dayDate}" data-sets="${rt.sets}" data-reps="${rt.reps}"
+                     onmousedown="startRoutineLongPress(this, event)" onmouseup="cancelRoutineLongPress()" onmouseleave="cancelRoutineLongPress()"
+                     ontouchstart="startRoutineLongPress(this, event)" ontouchend="cancelRoutineLongPress()" ontouchmove="cancelRoutineLongPress()">
+                    <div class="ex-details p-1">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="light-btn" onclick="event.stopPropagation(); openBenefitModal('${escapedName}')">💡</span>
+                            <span class="ex-name">${rt.exerciseName}</span>
+                        </div>
+                        <span class="ex-meta" style="color: var(--accent-color); font-weight:bold;">Sets: ${rt.sets} | Reps: ${rt.reps}</span>
+                        <span class="ex-meta" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">Type: ${exDetail.type || '-'} | Target: ${exDetail.target || '-'} | Tools: ${exDetail.tools || '-'}</span>
+                        ${exDetail.description ? `<span class="ex-meta" style="font-size: 11px; display: block; margin-top: 2px; color: var(--text-color);">${exDetail.description}</span>` : ''}
+                    </div>
+                    ${generateMediaHTML(exDetail.imageLink || exDetail.link)}
+                </div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        function startLongPress(exName) {
+            longPressTimer = setTimeout(() => {
+                selectedExerciseForRoutine = exName;
+                document.getElementById('modal-ex-title').innerText = `${exName} রুটিনে যোগ করুন`;
+                const container = document.getElementById('lp-days-container'); container.innerHTML = "";
+                const isRoutineDateBased = appData.routines.length > 0 ? isDateBasedStr(appData.routines[0].dayDate) : false;
+                let daysList = isRoutineDateBased ? Array.from({length: 31}, (_, i) => String(i + 1)) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+                daysList.forEach(day => {
+                    const existing = appData.routines.find(r => r.exerciseName.toLowerCase() === exName.toLowerCase() && String(r.dayDate).trim().toLowerCase() === day.toLowerCase());
+                    const isChecked = existing ? "checked" : "";
+                    const setsVal = existing ? existing.sets : "3";
+                    const repsVal = existing ? existing.reps : "12";
+                    const displayDayName = isRoutineDateBased ? `${toBanglaNumber(day)} তারিখ` : day;
+                    container.innerHTML += `
+                        <div style="display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">
+                            <input type="checkbox" id="chk-${day}" ${isChecked} style="width: 20px; height: 20px; margin:0;">
+                            <label for="chk-${day}" style="flex: 1; font-weight: bold; font-size: 14px; cursor: pointer;">${displayDayName}</label>
+                            <div style="display: flex; gap: 5px; width: 140px;">
+                                <input type="number" id="sets-${day}" value="${setsVal}" placeholder="Sets" style="padding: 4px; margin:0; text-align:center; font-size: 13px;">
+                                <input type="number" id="reps-${day}" value="${repsVal}" placeholder="Reps" style="padding: 4px; margin:0; text-align:center; font-size: 13px;">
+                            </div>
+                        </div>`;
+                });
+                document.getElementById('modal-manual-routine').classList.remove('hidden');
+            }, 600); 
+        }
+
+        function cancelLongPress() { clearTimeout(longPressTimer); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); document.querySelectorAll(`#${id} input:not([type="checkbox"]), #${id} textarea`).forEach(i => i.value = ''); }
+
+        async function saveManualRoutine() {
+            const isRoutineDateBased = appData.routines.length > 0 ? isDateBasedStr(appData.routines[0].dayDate) : false;
+            let daysList = isRoutineDateBased ? Array.from({length: 31}, (_, i) => String(i + 1)) : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            let routinesToSave = [];
+            daysList.forEach(day => {
+                if(document.getElementById(`chk-${day}`).checked) {
+                    routinesToSave.push({ exerciseName: selectedExerciseForRoutine, dayDate: day, sets: document.getElementById(`sets-${day}`).value.trim(), reps: document.getElementById(`reps-${day}`).value.trim() });
+                }
+            });
+            if(routinesToSave.length === 0) return alert("অন্তত একটি দিন বা তারিখ সিলেক্ট করুন।");
+            const res = await fetchAPI({ action: "saveLongPressRoutine", userName: currentUser.name, routines: routinesToSave });
+            
+            // 💥 Force update cache after save
+            if(res.status === "success") { closeModal('modal-manual-routine'); await loadData(true); switchTab('routine'); } 
+            else alert("রুটিন সেভ করতে সমস্যা হয়েছে।");
+        }
+
+        function openAiRoutineModal() { document.getElementById('modal-ai-routine').classList.remove('hidden'); }
+        async function copyDemoPrompt() {
+            const exNames = appData.exercises.map(e => e.name).join(', ');
+            let demo = `আমি একজন ছেলে, আমার বয়স ২৮ আমার ওজন ৮০ কেজি... \nআমার লিস্টে এই ব্যায়াম গুলো আছে:\n${exNames}\n\n@Exercise name@day/date@sets@reps@\nযেমন:\n@Hip flexor@8@3@10@`;
+            try { await navigator.clipboard.writeText(demo); alert("কপি করা হয়েছে!"); } catch (err) { alert("ব্রাউজার কপি সাপোর্ট করছে না"); }
+        }
+
+        async function submitAiRoutine() {
+            const txt = document.getElementById('ai-routine-input').value;
+            if(!txt) return;
+            const lines = txt.split('\n');
+            const routinesToSave = [];
+            lines.forEach(line => {
+                const parts = line.split('@').map(p => p.trim()).filter(p => p !== '');
+                if(parts.length >= 4) routinesToSave.push({ exerciseName: parts[0], dayDate: parts[1], sets: parts[2], reps: parts[3] });
+            });
+            if(routinesToSave.length === 0) return alert("সঠিক ফরম্যাটে ডাটা পাওয়া যায়নি।");
+            if(appData.routines.length > 0) {
+                if(!confirm("আগের রুটিন ডিলিট করে নতুনটি সেভ করতে চান?")) return;
+                const delRes = await fetchAPI({ action: "deleteRoutine", userName: currentUser.name });
+                if(delRes.status !== "success") return alert("আগের রুটিন ডিলিট করতে সমস্যা হয়েছে!");
+                appData.routines = []; 
+            }
+            showLoader(true);
+            const res = await fetchAPI({ action: "saveRoutine", userName: currentUser.name, routines: routinesToSave });
+            
+            // 💥 Force update cache after save
+            if(res.status === "success") { closeModal('modal-ai-routine'); document.getElementById('ai-routine-input').value = ''; await loadData(true); switchTab('routine'); } 
+            else { showLoader(false); alert("সমস্যা হয়েছে।"); }
+        }
+
+        async function deleteRoutine() {
+            if(!confirm("আপনি কি নিশ্চিত রুটিন মুছে ফেলতে চান?")) return;
+            const res = await fetchAPI({ action: "deleteRoutine", userName: currentUser.name });
+            
+            // 💥 Update cache after delete
+            if(res.status === "success") { 
+                appData.routines = []; 
+                const cacheKey = 'appData_' + currentUser.name;
+                localStorage.setItem(cacheKey, JSON.stringify({ exercises: appData.exercises, routines: [] }));
+                renderRoutine(); 
+                alert("মুছে ফেলা হয়েছে।"); 
+            }
+        }
+
+        /* =========================================
+           💥 এআই বাল্ক আপলোড / এডিটর এর ফাংশন 💥
+           ========================================= */
+
+        function toggleBulkFullscreen() {
+            const container = document.getElementById('bulk-editor-container');
+            container.classList.toggle('fullscreen-editor');
+            const btn = document.getElementById('close-admin-btn');
+            if(container.classList.contains('fullscreen-editor')) btn.classList.add('hidden');
+            else btn.classList.remove('hidden');
+        }
+
+        function copyBulkText() {
+            const el = document.getElementById('bulk-editor-box');
+            if(!el.value) return alert('কপি করার মতো কিছু নেই!');
+            el.select(); el.setSelectionRange(0, 99999); 
+            try { document.execCommand('copy'); alert("টেক্সট কপি করা হয়েছে!"); window.getSelection().removeAllRanges(); } 
+            catch (err) { alert("কপি করা যায়নি, ম্যানুয়ালি সিলেক্ট করে কপি করুন।"); }
+        }
+
+        function pasteBulkText() {
+            alert("সিকিউরিটির কারণে সরাসরি পেস্ট বাটন কাজ করবে না।\n\nদয়া করে বক্সের ভেতরে চেপে ধরে রাখুন (Long Press) এবং আপনার মোবাইলের 'Paste' অপশনটি ব্যবহার করুন।");
+            document.getElementById('bulk-editor-box').focus();
+        }
+
+        function clearBulkText() { document.getElementById('bulk-editor-box').value = ''; }
+
+        function openRecallModal() {
+            const listDiv = document.getElementById('recall-list');
+            listDiv.innerHTML = '';
+            if(appData.exercises.length === 0) { listDiv.innerHTML = '<p class="text-muted">কোনো ব্যায়াম নেই!</p>'; }
+            
+            appData.exercises.forEach((ex, idx) => {
+                listDiv.innerHTML += `
+                    <div style="display:flex; align-items:center; gap:8px; padding: 5px 0; border-bottom: 1px solid var(--border-color);">
+                        <input type="checkbox" id="recall-chk-${idx}" value="${ex.name}" style="width:16px; height:16px; margin:0;">
+                        <label for="recall-chk-${idx}" style="cursor:pointer; font-size:14px; color:var(--text-color);">${ex.name}</label>
+                    </div>
+                `;
+            });
+            document.getElementById('modal-recall').classList.remove('hidden');
+        }
+
+        function loadSelectedToBulk() {
+            const checkboxes = document.querySelectorAll('input[id^="recall-chk-"]:checked');
+            if(checkboxes.length === 0) return alert("অন্তত একটি ব্যায়াম সিলেক্ট করুন!");
+
+            let str = '';
+            checkboxes.forEach(chk => {
+                const ex = appData.exercises.find(e => e.name === chk.value);
+                if(ex) {
+                    str += `@exercise name@\n${ex.name || ''}\n`;
+                    str += `@image link@\n${ex.imageLink || ex.link || ''}\n`;
+                    str += `@type@\n${ex.type || ''}\n`;
+                    str += `@target@\n${ex.target || ''}\n`;
+                    str += `@status@\n${ex.status || 'Active'}\n`;
+                    str += `@benefit@\n${ex.benefit || ''}\n`;
+                    str += `@description@\n${ex.description || ''}\n`;
+                    str += `@tools@\n${ex.tools || ''}\n`;
+                    str += `@forgender@\n${ex.forgender || 'All'}\n@@@\n\n`;
+                }
+            });
+            document.getElementById('bulk-editor-box').value = str;
+            closeModal('modal-recall');
+        }
+
+        function parseBulkBoxData() {
+            const rawText = document.getElementById('bulk-editor-box').value;
+            if(!rawText.trim()) return null;
+
+            const blocks = rawText.split('@@@').map(b => b.trim()).filter(b => b.length > 0);
+            let exercises = [];
+
+            blocks.forEach(block => {
+                const regex = /@([^@]+)@\s*([\s\S]*?)(?=@|$)/g;
+                let match; let ex = {};
+                
+                while ((match = regex.exec(block)) !== null) {
+                    const field = match[1].trim().toLowerCase();
+                    const value = match[2].trim();
+                    if(field === 'exercise name' || field === 'name') ex.name = value;
+                    if(field === 'image link' || field === 'link') ex.link = value;
+                    if(field === 'type') ex.type = value;
+                    if(field === 'target') ex.target = value;
+                    if(field === 'status') ex.status = value;
+                    if(field === 'benefit') ex.benefit = value;
+                    if(field === 'description') ex.description = value;
+                    if(field === 'tools') ex.tools = value;
+                    if(field === 'forgender') ex.forgender = value;
+                }
+                if(ex.name) {
+                    ex.status = ex.status || 'Active';
+                    ex.forgender = ex.forgender || 'All';
+                    exercises.push(ex);
+                }
+            });
+            return exercises;
+        }
+
+        async function submitBulkAdd() {
+            const exs = parseBulkBoxData();
+            if(!exs || exs.length === 0) return alert("সঠিক ফরম্যাটে ডাটা দিন।");
+            showLoader(true);
+            const res = await fetchAPI({ action: "addBulkExercises", exercises: exs });
+            
+            // 💥 Force update cache after Add
+            if(res.status === "success") { alert(res.message); clearBulkText(); await loadData(true); switchTab('home'); } 
+            else { showLoader(false); alert("অ্যাড করতে সমস্যা হয়েছে!"); }
+        }
+
+        async function submitBulkUpdate() {
+            const exs = parseBulkBoxData();
+            if(!exs || exs.length === 0) return alert("সঠিক ফরম্যাটে ডাটা দিন।");
+            if(!confirm("বক্সে থাকা সব ডাটা দিয়ে কি আপনি শিটের পুরনো ডাটা আপডেট করতে চান?")) return;
+            
+            showLoader(true);
+            const res = await fetchAPI({ action: "updateBulkExercises", exercises: exs });
+            
+            // 💥 Force update cache after Update
+            if(res.status === "success") { alert(res.message); clearBulkText(); await loadData(true); switchTab('home'); } 
+            else { showLoader(false); alert("আপডেট করতে সমস্যা হয়েছে!"); }
+        }
+
+        function openEditModal() {
+            const select = document.getElementById('edit-ex-select'); select.innerHTML = '<option value="">ব্যায়াম নির্বাচন করুন...</option>';
+            appData.exercises.forEach(ex => {
+                const option = document.createElement('option'); option.value = ex.name; option.innerText = ex.name; select.appendChild(option);
+            });
+            document.getElementById('modal-edit-exercise').classList.remove('hidden');
+        }
+
+        function updateRoutineDropdown() {
+            const select = document.getElementById('routine-day-filter'); const currentVal = select.value;
+            select.innerHTML = '<option value="today">আজকের রুটিন</option>';
+            if (appData.routines.length === 0) return;
+            const uniqueDays = [...new Set(appData.routines.map(r => String(r.dayDate).trim().toLowerCase()))];
+            const isRoutineDateBased = isDateBasedStr(appData.routines[0].dayDate);
+            if (isRoutineDateBased) uniqueDays.sort((a, b) => parseInt(a) - parseInt(b));
+            else {
+                const order = { 'sun': 0, 'mon': 1, 'tue': 2, 'wed': 3, 'thu': 4, 'fri': 5, 'sat': 6, 'রবি': 0, 'সোম': 1, 'মঙ্গল': 2, 'বুধ': 3, 'বৃহস্পতি': 4, 'শুক্র': 5, 'শনি': 6 };
+                uniqueDays.sort((a, b) => (order[a] ?? 99) - (order[b] ?? 99));
+            }
+            uniqueDays.forEach(day => {
+                const option = document.createElement('option'); option.value = day;
+                option.innerText = isRoutineDateBased ? `${toBanglaNumber(day)} তারিখ` : (day.charAt(0).toUpperCase() + day.slice(1));
+                select.appendChild(option);
+            });
+            if (currentVal && uniqueDays.includes(currentVal)) select.value = currentVal; else select.value = 'today';
+        }
+
+        function closeModalOutside(e, modalId) { if (e.target.id === modalId) closeModal(modalId); }
+
+        async function deleteExercise() {
+            const oldName = document.getElementById('edit-ex-select').value;
+            if(!oldName) return alert("প্রথমে একটি ব্যায়াম নির্বাচন করুন");
+            if(!confirm(`আপনি কি নিশ্চিত যে "${oldName}" ব্যায়ামটি সম্পূর্ণ ডিলিট করতে চান?\nএর ফলে সবার রুটিন থেকেও এই ব্যায়ামটি স্থায়ীভাবে মুছে যাবে!`)) return;
+
+            const res = await fetchAPI({ action: "deleteExercise", name: oldName });
+            
+            // 💥 Force update cache after delete
+            if(res.status === "success") { alert("ব্যায়াম ডিলিট করা হয়েছে!"); closeModal('modal-edit-exercise'); await loadData(true); renderHome(); } 
+            else alert("ডিলিট করতে সমস্যা হয়েছে: " + res.message);
+        }
+
+        let routineLongPressTimer;
+        function startRoutineLongPress(element, e) {
+            if (e && e.target.classList.contains('light-btn')) return;
+            clearTimeout(routineLongPressTimer);
+            routineLongPressTimer = setTimeout(() => {
+                document.getElementById('rt-edit-name').value = element.getAttribute('data-name');
+                document.getElementById('rt-edit-day').value = element.getAttribute('data-day');
+                document.getElementById('rt-edit-sets').value = element.getAttribute('data-sets');
+                document.getElementById('rt-edit-reps').value = element.getAttribute('data-reps');
+                document.getElementById('modal-edit-routine-item').classList.remove('hidden');
+            }, 700); 
+        }
+
+        function cancelRoutineLongPress() { clearTimeout(routineLongPressTimer); }
+
+        function openBenefitModal(exName) {
+            const ex = appData.exercises.find(e => e.name.trim().toLowerCase() === exName.trim().toLowerCase());
+            document.getElementById('benefit-title').innerText = exName + " এর উপকারিতা";
+            document.getElementById('benefit-text').innerText = (ex && ex.benefit) ? ex.benefit : "কোনো উপকারিতা যুক্ত করা নেই।";
+            document.getElementById('modal-benefit').classList.remove('hidden');
+        }
+
+        async function updateRoutineItem() {
+            const exName = document.getElementById('rt-edit-name').value;
+            const dayDate = document.getElementById('rt-edit-day').value;
+            const sets = document.getElementById('rt-edit-sets').value.trim();
+            const reps = document.getElementById('rt-edit-reps').value.trim();
+            if(!sets || !reps) return alert("সেট এবং রেপ্স দিন");
+            const res = await fetchAPI({ action: "updateRoutineItem", userName: currentUser.name, exerciseName: exName, dayDate: dayDate, sets: sets, reps: reps });
+            
+            // 💥 Force update cache
+            if(res.status === "success") { alert("রুটিন সফলভাবে আপডেট হয়েছে!"); closeModal('modal-edit-routine-item'); await loadData(true); renderRoutine(document.getElementById('routine-day-filter').value); } 
+            else alert("আপডেট করতে সমস্যা হয়েছে।");
+        }
+
+        async function deleteRoutineItem() {
+            const exName = document.getElementById('rt-edit-name').value;
+            const dayDate = document.getElementById('rt-edit-day').value;
+            if(!confirm(`আপনি কি এই দিনের রুটিন থেকে "${exName}" মুছে ফেলতে চান?`)) return;
+            const res = await fetchAPI({ action: "deleteRoutineItem", userName: currentUser.name, exerciseName: exName, dayDate: dayDate });
+            
+            // 💥 Force update cache
+            if(res.status === "success") { alert("ব্যায়ামটি মুছে ফেলা হয়েছে!"); closeModal('modal-edit-routine-item'); await loadData(true); renderRoutine(document.getElementById('routine-day-filter').value); } 
+            else alert("মুছে ফেলতে সমস্যা হয়েছে।");
+        }
+    </script>
+</body>
+</html>
