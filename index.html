@@ -127,39 +127,41 @@ body.dark-mode .media-placeholder { background: #2a2a2a; border-color: #444; }
     z-index: 9;
     background: var(--bg-color);
 }
-      /* কাস্টম প্লে বাটনের ডিজাইন */
-.video-wrapper { 
-    display: flex; 
-    align-items: center; 
-    gap: 10px; 
-}
-.custom-play-btn { 
-    width: auto; 
-    padding: 6px 12px; 
-    font-size: 12px; 
-    background: var(--accent-color); 
-    color: #fff; 
-    border-radius: 4px; 
-    cursor: pointer; 
-    border: none; 
-}
+/* কাস্টম প্লে বাটনের ডিজাইন */
+.video-wrapper { display: flex; align-items: center; gap: 10px; }
+.custom-play-btn { width: auto; padding: 6px 12px; font-size: 12px; background: var(--accent-color); color: #fff; border-radius: 4px; cursor: pointer; border: none; }
 
-/* মিডিয়াম ভিউতে প্লে বাটন বামে এবং ভিডিও ডানে থাকবে */
 .view-medium .video-wrapper { flex-direction: row; }
+.view-large .video-wrapper { flex-direction: column-reverse; width: 100%; margin-top: 10px; }
+.view-large .custom-play-btn { width: 100%; padding: 10px; font-size: 14px; margin-top: 8px; }
 
-/* লার্জ ভিউতে ভিডিও উপরে এবং প্লে বাটন তার নিচে থাকবে */
-.view-large .video-wrapper { 
-    flex-direction: column-reverse; 
-    width: 100%; 
-    margin-top: 10px; 
-}
-.view-large .custom-play-btn { 
-    width: 100%; 
-    padding: 10px; 
-    font-size: 14px; 
-    margin-top: 8px; 
-}
+/* লিস্ট ভিউতে প্লে বাটন ও ভিডিও/GIF পুরোপুরি লুকিয়ে রাখা */
+.view-list .video-wrapper, .view-list .media-placeholder { display: none !important; }
 
+/* স্টপওয়াচের ডিজাইন */
+.stopwatch-container {
+    display: flex;
+    align-items: center;
+    background: #e9ecef;
+    padding: 3px 6px;
+    border-radius: 4px;
+    gap: 5px;
+}
+body.dark-mode .stopwatch-container { background: #333; }
+
+.sw-time { font-family: monospace; font-size: 14px; font-weight: bold; width: 45px; text-align: center; }
+.sw-btn { 
+    padding: 4px 8px; 
+    font-size: 11px; 
+    border: none; 
+    border-radius: 3px; 
+    cursor: pointer; 
+    color: white; 
+    font-weight: bold;
+}
+.sw-play { background: var(--accent-color); }
+.sw-pause { background: var(--danger); }
+.sw-reset { background: var(--text-muted); }
 
     </style>
 </head>
@@ -248,14 +250,22 @@ body.dark-mode .media-placeholder { background: #2a2a2a; border-color: #444; }
         <div id="tab-routine" class="tab-content hidden">
     <!-- ফিক্সড থাকার জন্য নতুন div -->
     <div class="sticky-tab-options">
-        <div class="controls">
-            <div class="view-btns" style="flex-grow: 1;">
-                <button onclick="changeView('list', 'routine')">List</button>
-                <button onclick="changeView('medium', 'routine')">Med</button>
-                <button onclick="changeView('large', 'routine')">Large</button>
-            </div>
-            <button class="btn-danger" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="deleteRoutine()">রুটিন মুছুন</button>
-        </div>
+        <div class="controls" style="align-items: center;">
+    <div class="view-btns">
+        <button onclick="changeView('list', 'routine')">List</button>
+        <button onclick="changeView('medium', 'routine')">Med</button>
+        <button onclick="changeView('large', 'routine')">Large</button>
+    </div>
+    
+    <!-- স্টপওয়াচ সেকশন -->
+    <div class="stopwatch-container" style="flex-grow: 1; justify-content: center;">
+        <span id="sw-display" class="sw-time">00:00</span>
+        <button id="sw-start-btn" class="sw-btn sw-play" onclick="toggleStopwatch()">▶ Start</button>
+        <button class="sw-btn sw-reset" onclick="resetStopwatch()">🔄</button>
+    </div>
+
+    <button class="btn-danger" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="deleteRoutine()">রুটিন মুছুন</button>
+</div>
         
         <!-- background: var(--card-bg); যুক্ত করা হয়েছে যেন স্ক্রল করার সময় ট্রান্সপারেন্ট না থাকে -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
@@ -458,6 +468,9 @@ body.dark-mode .media-placeholder { background: #2a2a2a; border-color: #444; }
         /* =========================================================================
    💥 RAM Optimization Core: Intersection Observer for Mobile Webviews
 ========================================================================= */
+/* =========================================================================
+   💥 RAM Optimization Core: Intersection Observer for Mobile Webviews
+========================================================================= */
 const mediaObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         const container = entry.target;
@@ -468,21 +481,34 @@ const mediaObserver = new IntersectionObserver((entries) => {
         const loaderTxt = container.querySelector('.loader-text');
 
         if (entry.isIntersecting) {
-            // ভুলটি এখানে ছিল, এখন ঠিক করা হয়েছে
             if (!media.getAttribute('src')) {
                 media.setAttribute('src', src); 
+                if(media.tagName.toLowerCase() === 'video') media.load();
             }
-            media.classList.remove('hidden');
+            if(media.tagName.toLowerCase() === 'video') {
+                media.classList.remove('hidden');
+            }
             if(loaderTxt) loaderTxt.style.display = 'none';
         } else {
-            // স্ক্রল করে ভিডিওটি স্ক্রিনের বাইরে চলে গেলে পজ হয়ে যাবে
+            // ভিডিও বা GIF স্ক্রিনের বাইরে গেলে পজ হয়ে যাবে
             if (media.tagName.toLowerCase() === 'video') {
                 media.pause();
+                updatePlayBtn(media, false);
+            } else if (media.tagName.toLowerCase() === 'img') {
+                if (media.getAttribute('data-playing') === 'true') {
+                    media.setAttribute('data-playing', 'false');
+                    const canvas = media.nextElementSibling;
+                    if (canvas && canvas.tagName.toLowerCase() === 'canvas') {
+                        canvas.getContext('2d').drawImage(media, 0, 0, canvas.width, canvas.height); // বর্তমান ফ্রেম ফ্রিজ করা
+                        canvas.classList.remove('hidden');
+                        media.classList.add('hidden');
+                    }
+                    updatePlayBtn(media, false);
+                }
             }
         }
     });
 }, { rootMargin: '300px 0px' });
-
 
 // কন্টেইনারের ভেতরের সব প্লেসহোল্ডারকে অবজার্ভ করার ফাংশন
 function observeMediaInContainer(containerId) {
@@ -706,6 +732,7 @@ async function loadData(force = false) {
 
    
 // 💥 Placeholder HTML Generator
+// 💥 Placeholder HTML Generator (ভিডিও এবং GIF উভয়ের জন্যই)
 function generateMediaPlaceholder(link) {
     if(!link) return '';
     const isVideo = link.match(/\.(mp4|webm|ogg)$/i) || link.includes("youtube.com/embed/");
@@ -716,19 +743,22 @@ function generateMediaPlaceholder(link) {
             <button class="custom-play-btn" onclick="toggleCustomPlay(this, event)">▶ প্লে</button>
             <div class="media-placeholder">
                 <div class="loader-text">Loading...</div>
-                <!-- native controls বাদ দিয়ে কাস্টম ইভেন্ট যোগ করা হয়েছে -->
-                <video class="ex-media real-media hidden" data-src="${link}" preload="metadata" loop muted playsinline onplay="updatePlayBtn(this, true)" onpause="updatePlayBtn(this, false)"></video>
+                <video class="ex-media real-media hidden" data-src="${link}#t=0.1" preload="metadata" loop muted playsinline onplay="updatePlayBtn(this, true)" onpause="updatePlayBtn(this, false)"></video>
             </div>
         </div>`;
     } else {
         return `
-        <div class="media-placeholder">
-            <div class="loader-text">Loading...</div>
-            <img class="ex-media real-media hidden" data-src="${link}" alt="Exercise">
+        <div class="video-wrapper">
+            <button class="custom-play-btn" onclick="toggleCustomPlay(this, event)">▶ প্লে</button>
+            <div class="media-placeholder">
+                <div class="loader-text">Loading...</div>
+                <!-- GIF-এর ফ্রেম ফ্রিজ করার জন্য canvas যুক্ত করা হয়েছে -->
+                <img class="ex-media real-media hidden" data-src="${link}" alt="Exercise" data-playing="false" onload="freezeGif(this)">
+                <canvas class="ex-media gif-canvas hidden"></canvas>
+            </div>
         </div>`;
     }
 }
-
 
 
 function renderHome() {
@@ -1307,32 +1337,140 @@ function toggleCustomPlay(btn, event) {
     }
 }
 
-// ভিডিও প্লে বা পজ হলে বাটনের আইকন ও রঙ অটোমেটিক বদলাবে
-function updatePlayBtn(video, isPlaying) {
-    const wrapper = video.closest('.video-wrapper');
+// GIF-এর বর্তমান ফ্রেমটি Canvas-এ ফ্রিজ করে রাখা
+function freezeGif(img) {
+    if (img.getAttribute('data-playing') === 'true') return;
+    const canvas = img.nextElementSibling;
+    if(canvas && canvas.classList.contains('gif-canvas')) {
+        canvas.width = img.naturalWidth || 300;
+        canvas.height = img.naturalHeight || 300;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        img.classList.add('hidden');
+        canvas.classList.remove('hidden');
+    }
+}
+
+// কাস্টম প্লে বাটনে ক্লিক করলে ভিডিও বা GIF প্লে/পজ হবে
+function toggleCustomPlay(btn, event) {
+    event.stopPropagation(); 
+    event.preventDefault();
+    
+    const wrapper = btn.closest('.video-wrapper');
+    const video = wrapper.querySelector('video');
+    const img = wrapper.querySelector('img.real-media');
+    
+    if (video) {
+        if(video.paused) {
+            pauseOtherVideos(video);
+            video.play();
+        } else {
+            video.pause();
+        }
+    } else if (img) {
+        const isPlaying = img.getAttribute('data-playing') === 'true';
+        const canvas = wrapper.querySelector('.gif-canvas');
+        
+        if (!isPlaying) {
+            pauseOtherVideos(img);
+            img.setAttribute('data-playing', 'true');
+            if(canvas) canvas.classList.add('hidden');
+            img.classList.remove('hidden');
+            updatePlayBtn(img, true);
+        } else {
+            img.setAttribute('data-playing', 'false');
+            if(canvas) {
+                // পজ করার সময় বর্তমান ফ্রেমটিকে ক্যানভাসে ছবি হিসেবে সেভ করে রাখা
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.classList.remove('hidden');
+            }
+            img.classList.add('hidden');
+            updatePlayBtn(img, false);
+        }
+    }
+}
+
+// বাটনের আইকন ও রঙ অটোমেটিক বদলাবে
+function updatePlayBtn(media, isPlaying) {
+    const wrapper = media.closest('.video-wrapper');
     if(!wrapper) return;
     const btn = wrapper.querySelector('.custom-play-btn');
     if(!btn) return;
     
     if(isPlaying) {
         btn.innerHTML = '⏸ পজ';
-        btn.style.background = 'var(--danger)'; // পজ করার জন্য লাল রঙ
+        btn.style.background = 'var(--danger)'; 
     } else {
         btn.innerHTML = '▶ প্লে';
-        btn.style.background = 'var(--accent-color)'; // প্লে করার জন্য সবুজ রঙ
+        btn.style.background = 'var(--accent-color)'; 
     }
 }
 
-// একটি ভিডিও প্লে হলে বাকি সব ভিডিও অটোমেটিক পজ করার ফাংশন
-function pauseOtherVideos(currentVideo) {
-    const allVideos = document.querySelectorAll('video');
-    allVideos.forEach(video => {
-        if (video !== currentVideo && !video.paused) {
+// একটি প্লে হলে বাকি সব ভিডিও বা GIF অটোমেটিক পজ করার ফাংশন
+function pauseOtherVideos(currentMedia) {
+    document.querySelectorAll('video').forEach(video => {
+        if (video !== currentMedia && !video.paused) {
             video.pause();
+        }
+    });
+    
+    document.querySelectorAll('img.real-media').forEach(img => {
+        if (img !== currentMedia && img.getAttribute('data-playing') === 'true') {
+            img.setAttribute('data-playing', 'false');
+            const canvas = img.nextElementSibling;
+            if (canvas && canvas.tagName.toLowerCase() === 'canvas') {
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                canvas.classList.remove('hidden');
+                img.classList.add('hidden');
+            }
+            updatePlayBtn(img, false);
         }
     });
 }
 
+/* =========================================
+   💥 স্টপওয়াচ ফাংশন 💥
+========================================= */
+let swInterval = null;
+let swSeconds = 0;
+
+function formatTime(sec) {
+    const m = Math.floor(sec / 60).toString().padStart(2, '0');
+    const s = (sec % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+}
+
+function toggleStopwatch() {
+    const btn = document.getElementById('sw-start-btn');
+    if (swInterval) {
+        // Pause করা হচ্ছে
+        clearInterval(swInterval);
+        swInterval = null;
+        btn.innerHTML = '▶ Start';
+        btn.classList.replace('sw-pause', 'sw-play');
+    } else {
+        // Start করা হচ্ছে
+        btn.innerHTML = '⏸ Pause';
+        btn.classList.replace('sw-play', 'sw-pause');
+        swInterval = setInterval(() => {
+            swSeconds++;
+            document.getElementById('sw-display').innerText = formatTime(swSeconds);
+        }, 1000);
+    }
+}
+
+function resetStopwatch() {
+    if (swInterval) {
+        clearInterval(swInterval);
+        swInterval = null;
+    }
+    swSeconds = 0;
+    document.getElementById('sw-display').innerText = '00:00';
+    const btn = document.getElementById('sw-start-btn');
+    btn.innerHTML = '▶ Start';
+    btn.classList.replace('sw-pause', 'sw-play');
+}
     </script>
 </body>
 </html>
