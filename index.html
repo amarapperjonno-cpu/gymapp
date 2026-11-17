@@ -94,33 +94,73 @@
         .fullscreen-editor { position: fixed !important; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 3000; background: var(--bg-color) !important; padding: 15px !important; display: flex; flex-direction: column; overflow: hidden; margin: 0 !important; border-radius: 0 !important; }
         .fullscreen-editor textarea { flex: 1; height: 100%; margin-bottom: 10px; }
 
-        /* 🌈 রেইনবো মিডিয়া লোডার স্টাইল */
-        .media-placeholder {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #f8f9fa; 
-            border-radius: 5px;
-            font-size: 11px;
-            font-weight: bold;
-            text-align: center;
-            padding: 5px;
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
-            background-size: 400% 400%;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: rainbow 3s ease infinite;
-        }
+/* 💥 RAM Optimized Placeholder Styling */
+.media-placeholder {
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    background: #e9ecef; border-radius: 5px; overflow: hidden;
+    border: 1px solid #eee;
+}
+body.dark-mode .media-placeholder { background: #2a2a2a; border-color: #444; }
+.loader-text { font-size: 10px; font-weight: bold; color: var(--text-muted); text-align: center; padding: 5px; }
 
-        body.dark-mode .media-placeholder { background-color: #2d2d2d; }
-        .view-medium .media-placeholder { width: 60px; height: 60px; }
-        .view-large .media-placeholder { width: 100%; height: 200px; font-size: 16px; }
+.view-medium .media-placeholder { min-width: 60px; max-width: 60px; min-height: 60px; margin-left: 10px; }
 
-        @keyframes rainbow { 
-            0%{background-position:0% 50%}
-            50%{background-position:100% 50%}
-            100%{background-position:0% 50%}
-        }
+/* লার্জ ভিউতে অটোমেটিক হাইট ফিট হবে */
+.view-large .media-placeholder { 
+    width: 100%; 
+    min-height: 200px; /* ভিডিও আসার আগে ডিফল্ট হাইট */
+    height: auto; 
+}
+
+.ex-media { width: 100%; height: 100%; object-fit: cover; }
+
+/* ভিডিও বা গিফ যেন কেটে না যায় */
+.view-large .ex-media { 
+    object-fit: contain; 
+    max-height: 400px; /* খুব বেশি লম্বা ভিডিও হলে সাইজ কন্ট্রোল করবে */
+    background: transparent; 
+}
+      .sticky-tab-options {
+    position: sticky;
+    top: 57px; /* Topbar-এর উচ্চতা অনুযায়ী নির্ধারিত */
+    z-index: 9;
+    background: var(--bg-color);
+}
+      /* কাস্টম প্লে বাটনের ডিজাইন */
+.video-wrapper { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+}
+.custom-play-btn { 
+    width: auto; 
+    padding: 6px 12px; 
+    font-size: 12px; 
+    background: var(--accent-color); 
+    color: #fff; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    border: none; 
+}
+
+/* মিডিয়াম ভিউতে প্লে বাটন বামে এবং ভিডিও ডানে থাকবে */
+.view-medium .video-wrapper { flex-direction: row; }
+
+/* লার্জ ভিউতে ভিডিও উপরে এবং প্লে বাটন তার নিচে থাকবে */
+.view-large .video-wrapper { 
+    flex-direction: column-reverse; 
+    width: 100%; 
+    margin-top: 10px; 
+}
+.view-large .custom-play-btn { 
+    width: 100%; 
+    padding: 10px; 
+    font-size: 14px; 
+    margin-top: 8px; 
+}
+
+
     </style>
 </head>
 <body>
@@ -129,7 +169,7 @@
 
     <div id="login-section" class="container hidden">
         <div class="auth-box">
-            <h2>লগইন</h2>
+            <h2>RIYADA=LIYAQA LOG IN</h2> <!-- আপডেট করা হলো -->
             <input type="tel" id="login-mobile" placeholder="মোবাইল নাম্বার">
             <input type="password" id="login-password" placeholder="পাসওয়ার্ড">
             <div class="show-pass-container" onclick="togglePassword('login-password', 'show-pass-checkbox')">
@@ -145,7 +185,7 @@
 
     <div id="signup-section" class="container hidden">
         <div class="auth-box">
-            <h2>সাইন আপ</h2>
+            <h2>RIYADA=LIYAQA SIGN UP</h2> <!-- আপডেট করা হলো -->
             <input type="text" id="su-name" placeholder="আপনার নাম">
             <input type="tel" id="su-mobile" placeholder="মোবাইল নাম্বার">
             <input type="number" id="su-age" placeholder="বয়স">
@@ -181,41 +221,55 @@
             </div>
         </div>
 
-        <div id="tab-home" class="tab-content">
-            <div class="controls">
-                <select id="group-by" onchange="renderHome()">
-                    <option value="type">টাইপ অনুযায়ী</option>
-                    <option value="target">টার্গেট অনুযায়ী</option>
-                </select>
-                <div class="view-btns">
-                    <button onclick="changeView('list')">List</button>
-                    <button onclick="changeView('medium')">Medium</button>
-                    <button onclick="changeView('large')">Large</button>
-                </div>
+<div id="tab-home" class="tab-content">
+    <!-- এই নতুন div-এর কারণে অপশনগুলো ফিক্সড থাকবে -->
+    <div class="sticky-tab-options">
+        <div class="controls">
+            <select id="group-by" onchange="renderHome()">
+                <option value="type">টাইপ অনুযায়ী</option>
+                <option value="target">টার্গেট অনুযায়ী</option>
+            </select>
+            <div class="view-btns">
+                <button onclick="changeView('list')">List</button>
+                <button onclick="changeView('medium')">Medium</button>
+                <button onclick="changeView('large')">Large</button>
             </div>
-            <div class="p-1 pb-0">
-                <button onclick="openAiRoutineModal()">এআই দিয়ে রুটিন তৈরি করুন</button>
-            </div>
-            <div id="exercise-list-container" class="view-medium pb-2"></div>
         </div>
+        <div class="p-1 pb-0" style="padding-bottom: 15px !important;"> 
+            <button onclick="openAiGeneratorModal()">এআই দিয়ে রুটিন তৈরি করুন</button>
+        </div>
+    </div>
+
+    <!-- শুধুমাত্র এই লিস্টটি স্ক্রল হবে -->
+    <div id="exercise-list-container" class="view-medium pb-2"></div>
+</div>
+
 
         <div id="tab-routine" class="tab-content hidden">
-            <div class="controls">
-                <div class="view-btns" style="flex-grow: 1;">
-                    <button onclick="changeView('list', 'routine')">List</button>
-                    <button onclick="changeView('medium', 'routine')">Med</button>
-                    <button onclick="changeView('large', 'routine')">Large</button>
-                </div>
-                <button class="btn-danger" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="deleteRoutine()">রুটিন মুছুন</button>
+    <!-- ফিক্সড থাকার জন্য নতুন div -->
+    <div class="sticky-tab-options">
+        <div class="controls">
+            <div class="view-btns" style="flex-grow: 1;">
+                <button onclick="changeView('list', 'routine')">List</button>
+                <button onclick="changeView('medium', 'routine')">Med</button>
+                <button onclick="changeView('large', 'routine')">Large</button>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color);">
-                <h3 id="routine-header" style="color: var(--accent-color); margin: 0; font-size: 18px;">আজকের রুটিন</h3>
-                <select id="routine-day-filter" style="width: auto; margin: 0; padding: 5px; font-size: 14px;" onchange="renderRoutine(this.value)">
-                    <option value="today">আজকের রুটিন</option>
-                </select>
-            </div>
-            <div id="routine-list-container" class="view-medium pb-2"></div>
+            <button class="btn-danger" style="width: auto; padding: 8px 12px; font-size: 12px;" onclick="deleteRoutine()">রুটিন মুছুন</button>
         </div>
+        
+        <!-- background: var(--card-bg); যুক্ত করা হয়েছে যেন স্ক্রল করার সময় ট্রান্সপারেন্ট না থাকে -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; border-bottom: 1px solid var(--border-color); background: var(--card-bg);">
+            <h3 id="routine-header" style="color: var(--accent-color); margin: 0; font-size: 18px;">আজকের রুটিন</h3>
+            <select id="routine-day-filter" style="width: auto; margin: 0; padding: 5px; font-size: 14px;" onchange="renderRoutine(this.value)">
+                <option value="today">আজকের রুটিন</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- শুধুমাত্র এই লিস্টটি স্ক্রল হবে -->
+    <div id="routine-list-container" class="view-medium pb-2"></div>
+</div>
+
 
         <div id="tab-admin" class="tab-content hidden p-1">
             <div id="bulk-editor-container" class="auth-box" style="margin-top: 0; position: relative;">
@@ -258,6 +312,62 @@
         </div>
     </div>
 
+<div id="modal-ai-generator" class="modal-overlay hidden">
+    <div class="modal" style="max-height: 85vh; overflow-y: auto;">
+        <h3 style="color: var(--bar-bg);">এ আই দিয়ে রুটিন তৈরি করুন</h3>
+        
+        <p style="font-size: 13px; margin-bottom: 10px; color: var(--accent-color);">
+            জেন্ডার: <span id="ai-info-gender"></span> | বয়স: <span id="ai-info-age"></span>
+        </p>
+
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-weight" placeholder="আপনার ওজন (কেজি)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-weight').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-waist" placeholder="আপনার কোমর (ইঞ্চি)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-waist').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-goal" placeholder="উদ্দেশ্য (যেমন: ভুঁড়ি কমাতে চাই)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-goal').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-duration" placeholder="প্রতিদিন কতক্ষণ (যেমন: ৩০ মিনিট)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-duration').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-injury" placeholder="ইনজুরি (যেমন: ইনজুরি আছে / নাই)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-injury').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-experience" placeholder="অভিজ্ঞতা (যেমন: আগে করি নাই)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-experience').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <div style="position: relative; margin-bottom: 15px;">
+            <input type="text" id="ai-in-equipment" placeholder="ইকুইপমেন্ট (যেমন: নাই / ডাম্বেল আছে)" style="margin-bottom: 0; padding-right: 30px;">
+            <span onclick="document.getElementById('ai-in-equipment').value=''" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--danger); cursor: pointer; font-size: 18px; font-weight: bold;">&times;</span>
+        </div>
+        
+        <select id="ai-in-routine-type">
+            <option value="">রুটিনের ধরন নির্বাচন করুন</option>
+            <option value="weekly">সাপ্তাহিক রুটিন (Weekly)</option>
+            <option value="monthly">মাসিক রুটিন (Monthly)</option>
+        </select>
+        
+        <div class="btn-group mt-1">
+            <button style="background: var(--danger);" onclick="closeModal('modal-ai-generator')">ক্লোজ করুন</button>
+            <button style="background: #e67e22;" onclick="openManualPromptModal()">Manual</button> 
+            <button onclick="generateAiRoutineFromForm()">রুটিন তৈরি করুন</button>
+        </div>
+    </div>
+</div>
     <div id="modal-manual-routine" class="modal-overlay hidden">
         <div class="modal" style="max-height: 85vh; overflow-y: auto;">
             <h3 id="modal-ex-title" style="color: var(--accent-color); border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">রুটিনে যোগ করুন</h3>
@@ -271,19 +381,25 @@
     </div>
 
     <div id="modal-ai-routine" class="modal-overlay hidden">
-        <div class="modal">
-            <h3>এ আই রুটিন পেস্ট করুন</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">ফরম্যাট: @Exercise name@day/date@sets@reps@</p>
-            <textarea id="ai-routine-input" rows="6" placeholder="@Hip flexor@sat@3@10@&#10;@dumble press@sun@3@20@"></textarea>
-            <div class="btn-group mb-1">
-                <button style="background: var(--bar-bg); font-size: 12px;" onclick="copyDemoPrompt()">ডেমো প্রম্পট কপি করুন</button>
-            </div>
-            <div class="btn-group">
-                <button style="background: var(--text-muted);" onclick="closeModal('modal-ai-routine')">বাতিল</button>
-                <button onclick="submitAiRoutine()">সেভ করুন</button>
-            </div>
+    <div class="modal">
+        <h3>এ আই রুটিন পেস্ট করুন</h3>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">ফরম্যাট: @Exercise name@day/date@sets@reps@</p>
+        
+        <div style="position: relative;">
+            <button onclick="document.getElementById('ai-routine-input').value = ''" style="position: absolute; top: 12px; right: 10px; width: auto; padding: 2px 8px; background: rgba(220, 53, 69, 0.8); color: white; border: none; font-size: 14px; border-radius: 4px; cursor: pointer; z-index: 10;" title="ক্লিয়ার করুন">✖</button>
+            
+            <textarea id="ai-routine-input" rows="6" placeholder="@Hip flexor@Sat@3@10@"></textarea>
+        </div>
+        
+        <div class="btn-group mb-1">
+            <button style="background: var(--bar-bg); font-size: 12px;" onclick="copyRoutineText()">কপি করুন</button>
+        </div>
+        <div class="btn-group">
+            <button style="background: var(--text-muted);" onclick="backToAiGenerator()">ফিরে যান (বাতিল)</button>
+            <button onclick="submitAiRoutine()">সেভ করুন</button>
         </div>
     </div>
+</div>
 
     <div id="modal-edit-exercise" class="modal-overlay hidden" onclick="closeModalOutside(event, 'modal-edit-exercise')">
         <div class="modal" style="max-height: 85vh; overflow-y: auto;" onclick="event.stopPropagation()">
@@ -336,6 +452,44 @@
         let selectedExerciseForRoutine = "";
         let currentHomeView = 'medium';
         let currentRoutineView = 'medium';
+         let isHomeRendered = false;
+         let lastRoutineFilter = null;
+
+        /* =========================================================================
+   💥 RAM Optimization Core: Intersection Observer for Mobile Webviews
+========================================================================= */
+const mediaObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        const container = entry.target;
+        const media = container.querySelector('.real-media');
+        if (!media) return;
+        
+        const src = media.getAttribute('data-src');
+        const loaderTxt = container.querySelector('.loader-text');
+
+        if (entry.isIntersecting) {
+            // ভুলটি এখানে ছিল, এখন ঠিক করা হয়েছে
+            if (!media.getAttribute('src')) {
+                media.setAttribute('src', src); 
+            }
+            media.classList.remove('hidden');
+            if(loaderTxt) loaderTxt.style.display = 'none';
+        } else {
+            // স্ক্রল করে ভিডিওটি স্ক্রিনের বাইরে চলে গেলে পজ হয়ে যাবে
+            if (media.tagName.toLowerCase() === 'video') {
+                media.pause();
+            }
+        }
+    });
+}, { rootMargin: '300px 0px' });
+
+
+// কন্টেইনারের ভেতরের সব প্লেসহোল্ডারকে অবজার্ভ করার ফাংশন
+function observeMediaInContainer(containerId) {
+    const container = document.getElementById(containerId);
+    container.querySelectorAll('.media-placeholder').forEach(el => mediaObserver.observe(el));
+}
+
 
         function toggleTheme() {
             const isDark = document.body.classList.toggle('dark-mode');
@@ -404,14 +558,29 @@
         }
 
        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            if(tabId !== 'admin') document.getElementById(`nav-${tabId}`).classList.add('active');
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    
+    if(tabId !== 'admin') document.getElementById(`nav-${tabId}`).classList.add('active');
 
-            if(tabId === 'home') renderHome();
-            if(tabId === 'routine') renderRoutine('today');
+    // হোম ট্যাব শুধুমাত্র একবার রেন্ডার হবে (যদি ডাটা পরিবর্তন না হয়)
+    if(tabId === 'home') {
+        if (!isHomeRendered) {
+            renderHome();
+            isHomeRendered = true;
         }
+    }
+    
+    // রুটিন ট্যাব শুধু ফিল্টার পরিবর্তন হলেই নতুন করে রেন্ডার হবে
+    if(tabId === 'routine') {
+        const currentFilter = document.getElementById('routine-day-filter').value || 'today';
+        if (lastRoutineFilter !== currentFilter) {
+            renderRoutine(currentFilter);
+            lastRoutineFilter = currentFilter;
+        }
+    }
+}
 
         async function handleLogin() {
             const rawMobile = document.getElementById('login-mobile').value;
@@ -462,8 +631,9 @@
             await loadData(); switchTab('home');
         }
 
-        /* =========================================
-           💥 ডাটা প্রসেস ও ক্যাশ লোডিং মেকানিজম 💥
+        
+/* =========================================
+ 💥 ডাটা প্রসেস ও ক্যাশ লোডিং মেকানিজম 💥
            ========================================= */
 
         function processFetchedData(res) {
@@ -487,99 +657,134 @@
             appData.exercises = exs; appData.routines = rts;
         }
 
-        async function loadData(forceRefresh = false) {
-            const cacheKey = 'appData_' + currentUser.name;
 
-            if (!forceRefresh) {
-                const cachedData = localStorage.getItem(cacheKey);
-                if (cachedData) {
-                    const parsed = JSON.parse(cachedData);
-                    appData.exercises = parsed.exercises || [];
-                    appData.routines = parsed.routines || [];
-                    
-                    // সাইলেন্ট ব্যাকগ্রাউন্ড আপডেট (অ্যাডমিন কিছু চেঞ্জ করলে ইউজার অটো পেয়ে যাবে)
-                    fetchAPI({ action: "getData", userName: currentUser.name }).then(res => {
-                        if(res.status === "success") {
-                            processFetchedData(res);
-                            localStorage.setItem(cacheKey, JSON.stringify({ exercises: appData.exercises, routines: appData.routines }));
-                            // স্ক্রিন অটো রিফ্রেশ
-                            if(!document.getElementById('tab-home').classList.contains('hidden')) renderHome();
-                            if(!document.getElementById('tab-routine').classList.contains('hidden')) renderRoutine(document.getElementById('routine-day-filter').value);
-                        }
-                    });
-                    return; 
-                }
-            }
+async function loadData(force = false) {
+    const cacheKey = 'appData_' + currentUser.name;
 
-            // যদি ক্যাশ না থাকে অথবা ফোর্স রিফ্রেশ করা হয় (যেমন এডিট/অ্যাড করার পর)
-            const res = await fetchAPI({ action: "getData", userName: currentUser.name });
-            if(res.status === "success") {
-                processFetchedData(res);
-                localStorage.setItem(cacheKey, JSON.stringify({ exercises: appData.exercises, routines: appData.routines }));
-            }
+    // ফোর্স রিফ্রেশ করা হলে DOM ক্যাশ রিসেট করে দিবে
+    if (force) {
+        isHomeRendered = false;
+        lastRoutineFilter = null;
+    }
+
+    // ১. যদি ফোর্স রিফ্রেশ না হয়, তবে লোকাল স্টোরেজ (ক্যাশ) থেকে দ্রুত ডাটা দেখান
+    if (!force) {
+        const cachedData = localStorage.getItem(cacheKey);
+        if (cachedData) {
+            processFetchedData(JSON.parse(cachedData));
+            return; // ক্যাশ থেকে ডাটা পেয়ে গেলে আর শিটে রিকোয়েস্ট করবে না
         }
+    }
 
+    // ২. ক্যাশ না থাকলে বা ফোর্স রিফ্রেশ করলে গুগল শিট থেকে ফ্রেশ ডাটা আনা হবে
+    const res = await fetchAPI({ action: "getData", userName: currentUser.name });
+    if(res.status === "success") {
+        localStorage.setItem(cacheKey, JSON.stringify(res)); // ক্যাশে সেভ করা হলো
+        processFetchedData(res);
+    }
+}        
         async function forceRefreshData() {
             await loadData(true);
             const activeNav = document.querySelector('.nav-item.active');
             if(activeNav) switchTab(activeNav.id.replace('nav-', ''));
         }
 
-        function changeView(viewMode, section = 'home') {
-            if(section === 'home') { currentHomeView = viewMode; renderHome(); } 
-            else { currentRoutineView = viewMode; renderRoutine(document.getElementById('routine-day-filter').value); }
-        }
+       function changeView(viewMode, section = 'home') {
+    if(section === 'home') { 
+        currentHomeView = viewMode; 
+        isHomeRendered = false; // ভিউ চেঞ্জ হলে রেন্ডার করতে হবে
+        renderHome(); 
+        isHomeRendered = true;
+    } else { 
+        currentRoutineView = viewMode; 
+        lastRoutineFilter = null; // ভিউ চেঞ্জ হলে রেন্ডার করতে হবে
+        const filter = document.getElementById('routine-day-filter').value;
+        renderRoutine(filter); 
+        lastRoutineFilter = filter;
+    }
+}
 
-        /* 🌈 রেইনবো প্লেসহোল্ডার জেনারেটর */
-        function generateMediaHTML(link) {
-            if(!link) return '';
-            
-            const uniqueId = 'media-' + Math.random().toString(36).substr(2, 9);
-            const isVideo = link.match(/\.(mp4|webm|ogg)$/i) || link.includes("youtube.com/embed/");
-            
-            let html = `<div id="placeholder-${uniqueId}" class="media-placeholder">Exercise is coming...<br>Wait</div>`;
-            
-            if(isVideo) {
-                html += `<video id="${uniqueId}" class="ex-media hidden" src="${link}" autoplay loop muted playsinline onloadeddata="document.getElementById('placeholder-${uniqueId}').classList.add('hidden'); this.classList.remove('hidden');"></video>`;
-            } else {
-                html += `<img id="${uniqueId}" class="ex-media hidden" src="${link}" alt="Exercise" onload="document.getElementById('placeholder-${uniqueId}').classList.add('hidden'); this.classList.remove('hidden');">`;
-            }
-            return html;
-        }
+   
+// 💥 Placeholder HTML Generator
+function generateMediaPlaceholder(link) {
+    if(!link) return '';
+    const isVideo = link.match(/\.(mp4|webm|ogg)$/i) || link.includes("youtube.com/embed/");
 
-       function renderHome() {
-            const container = document.getElementById('exercise-list-container');
-            container.className = `view-${currentHomeView} pb-2`; container.innerHTML = '';
-            const groupBy = document.getElementById('group-by').value;
-            const groups = {};
-            appData.exercises.forEach(ex => {
-                if (ex.status && String(ex.status).toLowerCase().trim() === 'inactive') return;
-                const key = String(ex[groupBy] || 'Others').trim().toUpperCase(); 
-                if(!groups[key]) groups[key] = []; groups[key].push(ex);
+    if (isVideo) {
+        return `
+        <div class="video-wrapper">
+            <button class="custom-play-btn" onclick="toggleCustomPlay(this, event)">▶ প্লে</button>
+            <div class="media-placeholder">
+                <div class="loader-text">Loading...</div>
+                <!-- native controls বাদ দিয়ে কাস্টম ইভেন্ট যোগ করা হয়েছে -->
+                <video class="ex-media real-media hidden" data-src="${link}" preload="metadata" loop muted playsinline onplay="updatePlayBtn(this, true)" onpause="updatePlayBtn(this, false)"></video>
+            </div>
+        </div>`;
+    } else {
+        return `
+        <div class="media-placeholder">
+            <div class="loader-text">Loading...</div>
+            <img class="ex-media real-media hidden" data-src="${link}" alt="Exercise">
+        </div>`;
+    }
+}
+
+
+
+function renderHome() {
+    const container = document.getElementById('exercise-list-container');
+    container.className = `view-${currentHomeView} pb-2`; 
+    // container.innerHTML = ''; // এটি সরিয়ে দিন
+    
+    const groupBy = document.getElementById('group-by').value;
+    const groups = {};
+    
+    appData.exercises.forEach(ex => {
+        if (ex.status && String(ex.status).toLowerCase().trim() === 'inactive') return;
+        const key = String(ex[groupBy] || 'Others').trim().toUpperCase(); 
+        if(!groups[key]) groups[key] = []; groups[key].push(ex);
+    });
+
+    const userGender = String(currentUser.gender || currentUser.Gender || currentUser.forgender || '').trim().toLowerCase();
+
+    let finalHTML = ''; // নতুন ভেরিয়েবল তৈরি করুন
+
+    for(const [groupName, exs] of Object.entries(groups)) {
+        if (userGender === 'female') {
+            exs.sort((a, b) => {
+                const aFor = String(a.forgender || a.gender || '').trim().toLowerCase();
+                const bFor = String(b.forgender || b.gender || '').trim().toLowerCase();
+                if (aFor === 'female' && bFor !== 'female') return -1;
+                if (aFor !== 'female' && bFor === 'female') return 1;
+                return 0;
             });
-            for(const [groupName, exs] of Object.entries(groups)) {
-                container.innerHTML += `<div class="group-title">${groupName}</div>`;
-                exs.forEach(ex => {
-                    const escapedName = ex.name.replace(/'/g, "\\'");
-                    const html = `
-                    <div class="ex-item"
-                         onmousedown="startLongPress('${escapedName}')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
-                         ontouchstart="startLongPress('${escapedName}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
-                        <div class="ex-details">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span class="light-btn" onclick="event.stopPropagation(); openBenefitModal('${escapedName}')">💡</span>
-                                <span class="ex-name">${ex.name}</span>
-                            </div>
-                            <span class="ex-meta">Type: ${ex.type || '-'} | Target: ${ex.target || '-'} | Tools: ${ex.tools || '-'}</span>
-                            ${ex.description ? `<span class="ex-meta" style="font-size: 11px; display: block; margin-top: 4px; color: var(--text-color);">${ex.description}</span>` : ''}
-                        </div>
-                        ${generateMediaHTML(ex.imageLink || ex.link)}
-                    </div>`;
-                    container.innerHTML += html;
-                });
-            }
         }
 
+        finalHTML += `<div class="group-title">${groupName}</div>`;
+        exs.forEach(ex => {
+            const escapedName = ex.name.replace(/'/g, "\\'");
+            const html = `
+            <div class="ex-item"
+                 onmousedown="startLongPress('${escapedName}')" onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()"
+                 ontouchstart="startLongPress('${escapedName}')" ontouchend="cancelLongPress()" ontouchmove="cancelLongPress()">
+                <div class="ex-details">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="light-btn" onclick="event.stopPropagation(); openBenefitModal('${escapedName}')">💡</span>
+                        <span class="ex-name">${ex.name}</span>
+                    </div>
+                    <span class="ex-meta">Type: ${ex.type || '-'} | Target: ${ex.target || '-'} | Tools: ${ex.tools || '-'}</span>
+                    ${ex.description ? `<span class="ex-meta" style="font-size: 11px; display: block; margin-top: 4px; color: var(--text-color);">${ex.description}</span>` : ''}
+                </div>
+                ${generateMediaPlaceholder(ex.imageLink || ex.link)}
+            </div>`;
+            finalHTML += html; // স্ট্রিং এ যোগ করুন
+        });
+    }
+    container.innerHTML = finalHTML; // লুপের বাইরে একবারে রেন্ডার করুন
+    observeMediaInContainer('exercise-list-container');
+}
+
+       
         function getTodayInfo() {
             const d = new Date(); const daysEng = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']; const daysBng = ['রবি', 'সোম', 'মঙ্গল', 'বুধ', 'বৃহস্পতি', 'শুক্র', 'শনি'];
             return { date: String(d.getDate()), dayEng: daysEng[d.getDay()], dayBng: daysBng[d.getDay()] };
@@ -592,7 +797,8 @@
             if (filterVal !== null) select.value = filterVal;
             const currentFilter = select.value || 'today';
             const container = document.getElementById('routine-list-container');
-            container.className = `view-${currentRoutineView} pb-2`; container.innerHTML = '';
+            container.className = `view-${currentRoutineView} pb-2`; 
+            // container.innerHTML = ''; // এটি সরিয়ে দেওয়া হলো
 
             if(appData.routines.length === 0) {
                 container.innerHTML = '<div class="p-1 text-center text-muted">কোনো রুটিন পাওয়া যায়নি</div>';
@@ -620,12 +826,18 @@
                 container.innerHTML = `<div class="p-1 text-center text-muted">${currentFilter === 'today' ? 'আজকের' : 'এই দিনের'} জন্য কোনো ব্যায়াম সেট করা নেই।</div>`; return;
             }
 
+            let finalHTML = ''; // নতুন ভেরিয়েবল তৈরি করা হলো
+
             displayRoutines.forEach(rt => {
-                const exDetail = appData.exercises.find(e => e.name.trim().toLowerCase() === rt.exerciseName.trim().toLowerCase()) || {};
-                const escapedName = rt.exerciseName.replace(/'/g, "\\'");
+                // 💥 নামের স্পেস বা ছোট-বড় হাতের অক্ষর যেন ক্র্যাশ না করায় তার জন্য সেফটি চেক
+                const exDetail = appData.exercises.find(e => String(e.name || '').trim().toLowerCase() === String(rt.exerciseName || '').trim().toLowerCase()) || {};
+                
+                const escapedName = String(rt.exerciseName || '').replace(/'/g, "\\'");
+                const mediaLink = exDetail.imageLink || exDetail.link || '';
+                
                 const html = `
                 <div class="ex-item" style="border-radius:0;"
-                     data-name="${rt.exerciseName}" data-day="${rt.dayDate}" data-sets="${rt.sets}" data-reps="${rt.reps}"
+                     data-name="${escapedName}" data-day="${rt.dayDate}" data-sets="${rt.sets}" data-reps="${rt.reps}"
                      onmousedown="startRoutineLongPress(this, event)" onmouseup="cancelRoutineLongPress()" onmouseleave="cancelRoutineLongPress()"
                      ontouchstart="startRoutineLongPress(this, event)" ontouchend="cancelRoutineLongPress()" ontouchmove="cancelRoutineLongPress()">
                     <div class="ex-details p-1">
@@ -637,11 +849,16 @@
                         <span class="ex-meta" style="font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px;">Type: ${exDetail.type || '-'} | Target: ${exDetail.target || '-'} | Tools: ${exDetail.tools || '-'}</span>
                         ${exDetail.description ? `<span class="ex-meta" style="font-size: 11px; display: block; margin-top: 2px; color: var(--text-color);">${exDetail.description}</span>` : ''}
                     </div>
-                    ${generateMediaHTML(exDetail.imageLink || exDetail.link)}
+                    ${generateMediaPlaceholder(mediaLink)}
                 </div>`;
-                container.innerHTML += html;
+                
+                finalHTML += html; // স্ট্রিং এ যোগ করা হলো
             });
+            
+            container.innerHTML = finalHTML; // লুপের বাইরে একবারে রেন্ডার করা হলো
+            observeMediaInContainer('routine-list-container');
         }
+
 
         function startLongPress(exName) {
             longPressTimer = setTimeout(() => {
@@ -945,6 +1162,177 @@
             if(res.status === "success") { alert("ব্যায়ামটি মুছে ফেলা হয়েছে!"); closeModal('modal-edit-routine-item'); await loadData(true); renderRoutine(document.getElementById('routine-day-filter').value); } 
             else alert("মুছে ফেলতে সমস্যা হয়েছে।");
         }
+
+function openAiGeneratorModal() {
+    const userGender = currentUser.gender || currentUser.Gender || 'Male';
+    const userAge = currentUser.age || 'জানা নেই';
+    
+    // সাইন আপের ইনফো থেকে ডাটা দেখানো
+    document.getElementById('ai-info-gender').innerText = userGender === 'Male' ? 'ছেলে' : 'মেয়ে';
+    document.getElementById('ai-info-age').innerText = userAge;
+    
+    document.getElementById('modal-ai-generator').classList.remove('hidden');
+}
+
+async function generateAiRoutineFromForm() {
+    const weight = document.getElementById('ai-in-weight').value;
+    const waist = document.getElementById('ai-in-waist').value;
+    const goal = document.getElementById('ai-in-goal').value;
+    const duration = document.getElementById('ai-in-duration').value;
+    const injury = document.getElementById('ai-in-injury').value;
+    const experience = document.getElementById('ai-in-experience').value;
+    const equipment = document.getElementById('ai-in-equipment').value;
+    const routineType = document.getElementById('ai-in-routine-type').value;
+
+    const userGender = currentUser.gender || currentUser.Gender || 'Male';
+    const genderBng = userGender === 'Male' ? 'ছেলে' : 'মেয়ে';
+    const age = currentUser.age || '২৮'; 
+
+    if(!weight || !waist || !goal || !duration || !injury || !experience || !equipment || !routineType) {
+        return alert("অনুগ্রহ করে সব ফিল্ড পূরণ করুন!");
+    }
+
+    // শিট থেকে ব্যায়ামের লিস্ট নেওয়া
+    const exNames = appData.exercises.map(e => e.name).join(', ');
+    
+    // সাপ্তাহিক ও মাসিকের জন্য আলাদা ফরম্যাট নির্ধারণ
+    let formatInstruction = "";
+    if (routineType === 'weekly') {
+        formatInstruction = "রুটিন এই সাপ্তাহিক ফরমেটে হবে:\n@Exercise name@day name@sets@reps@\nযেমন:\n@Hip flexor@Sat@3@10@";
+    } else {
+        formatInstruction = "রুটিন এই মাসিক ফরমেটে হবে:\n@Exercise name@date@sets@reps@\nযেমন:\n@Hip flexor@2@3@10@";
+    }
+    formatInstruction += "\nযেদিন রেস্ট থাকবে সেদিনের টা এভাবে দিবে:\n@rest day no exercise@0@0@0@";
+
+    // প্রম্পট তৈরি (বাড়তি কথা না লেখার কঠোর নির্দেশসহ)
+    const prompt = `আমি একজন ${genderBng},\nআমার বয়স ${age}\nআমার ওজন ${weight} কেজি...\nআমার কোমর ${waist} ইঞ্চি\nআমি ${goal} করতে চাই।\nআমি প্রতিদিন ${duration} ব্যায়াম করবো\nআমার ${injury}\nআমি ${experience}\nআমার কাছে ${equipment}\n\nআমার লিস্টে এই ব্যায়াম গুলো আছে:\n${exNames}\n\nএগুলো থেকে আমার উদ্দেশ্য অনুযায়ি উপযোগী ব্যায়াম এর একটি রুটিন বানিয়ে দাও।\n${formatInstruction}\nরুটিনে ব্যায়ামের নামের বানান অ্যাপ এ থাকা নামের বানান একই হবে।\nখুব জরুরি নির্দেশ: কোনো প্রকার বাড়তি কথা, ভূমিকা, টিপস বা উপসংহার লিখবে না। শুধুমাত্র প্রম্পটে দেয়া ফরমেটে রুটিনটি আউটপুট দিবে।`;
+
+    // closeModal() ইনপুটের ডাটা মুছে দেয়, তাই শুধু হাইড করতে হবে:
+document.getElementById('modal-ai-generator').classList.add('hidden');
+    showLoader(true);
+
+    try {
+        const res = await fetchAPI({ action: "callGeminiAPI", promptText: prompt });
+        showLoader(false);
+
+        if(res.status === "success") {
+            document.getElementById('ai-routine-input').value = res.generatedRoutine;
+            document.getElementById('modal-ai-routine').classList.remove('hidden');
+        } else {
+            document.getElementById('ai-routine-input').value = prompt;
+            document.getElementById('modal-ai-routine').classList.remove('hidden');
+            alert("ব্যাকএন্ডে জেমিনি API রেসপন্স করতে সমস্যা হয়েছে। আপনি চাইলে এই প্রম্পটটি সরাসরি জেমিনিতে পেস্ট করে রুটিন বানাতে পারেন।");
+        }
+    } catch (e) {
+        showLoader(false);
+        alert("নেটওয়ার্ক সমস্যা!");
+    }
+}
+
+function openManualPromptModal() {
+    const weight = document.getElementById('ai-in-weight').value;
+    const waist = document.getElementById('ai-in-waist').value;
+    const goal = document.getElementById('ai-in-goal').value;
+    const duration = document.getElementById('ai-in-duration').value;
+    const injury = document.getElementById('ai-in-injury').value;
+    const experience = document.getElementById('ai-in-experience').value;
+    const equipment = document.getElementById('ai-in-equipment').value;
+    const routineType = document.getElementById('ai-in-routine-type').value;
+
+    if(!weight || !waist || !goal || !duration || !injury || !experience || !equipment || !routineType) {
+        return alert("অনুগ্রহ করে সব ফিল্ড পূরণ করুন!");
+    }
+
+    const userGender = currentUser.gender || currentUser.Gender || 'Male';
+    const genderBng = userGender === 'Male' ? 'ছেলে' : 'মেয়ে';
+    const age = currentUser.age || '২৮'; 
+
+    const exNames = appData.exercises.map(e => e.name).join(', ');
+
+    let formatInstruction = "";
+    if (routineType === 'weekly') {
+        formatInstruction = "রুটিন এই সাপ্তাহিক ফরমেটে হবে:\n@Exercise name@day name@sets@reps@\nযেমন:\n@Hip flexor@Sat@3@10@";
+    } else {
+        formatInstruction = "রুটিন এই মাসিক ফরমেটে হবে:\n@Exercise name@date@sets@reps@\nযেমন:\n@Hip flexor@2@3@10@";
+    }
+    formatInstruction += "\nযেদিন রেস্ট থাকবে সেদিনের টা এভাবে দিবে:\n@rest day no exercise@0@0@0@";
+
+    const prompt = `আমি একজন ${genderBng},\nআমার বয়স ${age}\nআমার ওজন ${weight} কেজি...\nআমার কোমর ${waist} ইঞ্চি\nআমার উদ্দেশ্যঃ ${goal} করতে চাই।\nআমি প্রতিদিন ${duration} ব্যায়াম করবো\nআমার ইনজুরিঃ ${injury}\nআমার ব্যামের পূর্ব অভিজ্ঞতাঃ ${experience}\nআমার কাছে ব্যামের সরঞ্জামঃ  ${equipment}\n\nআমার লিস্টে এই ব্যায়াম গুলো আছে:\n${exNames}\n\nএগুলো থেকে আমার উদ্দেশ্য অনুযায়ি উপযোগী ব্যায়াম এর একটি রুটিন বানিয়ে দাও।\n${formatInstruction}\nরুটিনে ব্যায়ামের নামের বানান অ্যাপ এ থাকা নামের বানান একই হবে।\nখুব জরুরি নির্দেশ: কোনো প্রকার বাড়তি কথা, ভূমিকা, টিপস বা উপসংহার লিখবে না। শুধুমাত্র প্রম্পটে দেয়া ফরমেটে রুটিনটি আউটপুট দিবে।`;
+
+    document.getElementById('ai-routine-input').value = prompt;
+   // closeModal() ইনপুটের ডাটা মুছে দেয়, তাই শুধু হাইড করতে হবে:
+document.getElementById('modal-ai-generator').classList.add('hidden');
+    document.getElementById('modal-ai-routine').classList.remove('hidden');
+}
+
+async function copyRoutineText() {
+    const textToCopy = document.getElementById('ai-routine-input').value;
+    if(!textToCopy) return alert("কপি করার মতো কিছু নেই!");
+    try { 
+        await navigator.clipboard.writeText(textToCopy); 
+        alert("কপি করা হয়েছে!"); 
+    } catch (err) { 
+        alert("ব্রাউজার কপি সাপোর্ট করছে না"); 
+    }
+}
+
+function backToAiGenerator() {
+    // বর্তমান মোডালটি শুধু হাইড করবে
+    document.getElementById('modal-ai-routine').classList.add('hidden');
+    // আগের মোডালটি আবার শো করবে
+    document.getElementById('modal-ai-generator').classList.remove('hidden');
+}
+      // একটি ভিডিও প্লে হলে বাকি সব ভিডিও অটোমেটিক পজ করার ফাংশন
+function pauseOtherVideos(currentVideo) {
+    const allVideos = document.querySelectorAll('video');
+    allVideos.forEach(video => {
+        if (video !== currentVideo && !video.paused) {
+            video.pause();
+        }
+    });
+}
+// কাস্টম প্লে বাটনে ক্লিক করলে ভিডিও প্লে/পজ হবে
+function toggleCustomPlay(btn, event) {
+    event.stopPropagation(); // লিস্টের অন্য কোথাও ক্লিক বা লং-প্রেস যেন না হয়
+    event.preventDefault();
+    
+    const wrapper = btn.closest('.video-wrapper');
+    const video = wrapper.querySelector('video');
+    
+    if(video.paused) {
+        pauseOtherVideos(video); // অন্য সব ভিডিও পজ করবে
+        video.play();
+    } else {
+        video.pause();
+    }
+}
+
+// ভিডিও প্লে বা পজ হলে বাটনের আইকন ও রঙ অটোমেটিক বদলাবে
+function updatePlayBtn(video, isPlaying) {
+    const wrapper = video.closest('.video-wrapper');
+    if(!wrapper) return;
+    const btn = wrapper.querySelector('.custom-play-btn');
+    if(!btn) return;
+    
+    if(isPlaying) {
+        btn.innerHTML = '⏸ পজ';
+        btn.style.background = 'var(--danger)'; // পজ করার জন্য লাল রঙ
+    } else {
+        btn.innerHTML = '▶ প্লে';
+        btn.style.background = 'var(--accent-color)'; // প্লে করার জন্য সবুজ রঙ
+    }
+}
+
+// একটি ভিডিও প্লে হলে বাকি সব ভিডিও অটোমেটিক পজ করার ফাংশন
+function pauseOtherVideos(currentVideo) {
+    const allVideos = document.querySelectorAll('video');
+    allVideos.forEach(video => {
+        if (video !== currentVideo && !video.paused) {
+            video.pause();
+        }
+    });
+}
+
     </script>
 </body>
 </html>
